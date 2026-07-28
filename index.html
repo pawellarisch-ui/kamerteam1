@@ -1182,6 +1182,201 @@
       }
     }
 
+  
+    .chat-shell {
+      display: grid;
+      grid-template-rows: minmax(360px, 62vh) auto;
+      gap: 14px;
+    }
+
+    .chat-messages {
+      overflow-y: auto;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(40,134,146,.10), transparent 28%),
+        rgba(5, 22, 28, .76);
+      scroll-behavior: smooth;
+    }
+
+    .chat-day-separator {
+      display: flex;
+      justify-content: center;
+      margin: 16px 0;
+    }
+
+    .chat-day-separator span {
+      padding: 6px 11px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(8,32,39,.92);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .chat-message-row {
+      display: flex;
+      margin: 8px 0;
+    }
+
+    .chat-message-row.mine {
+      justify-content: flex-end;
+    }
+
+    .chat-bubble {
+      width: min(76%, 680px);
+      padding: 10px 12px 8px;
+      border: 1px solid var(--line);
+      border-radius: 15px 15px 15px 4px;
+      background: rgba(255,255,255,.065);
+      box-shadow: 0 8px 22px rgba(0,0,0,.14);
+    }
+
+    .chat-message-row.mine .chat-bubble {
+      border-radius: 15px 15px 4px 15px;
+      background: rgba(245,196,81,.17);
+      border-color: rgba(245,196,81,.36);
+    }
+
+    .chat-author {
+      margin-bottom: 5px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .chat-text {
+      color: var(--text);
+      line-height: 1.5;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .chat-photo-button {
+      display: block;
+      width: 100%;
+      margin: 7px 0 2px;
+      padding: 0;
+      border: 0;
+      border-radius: 12px;
+      overflow: hidden;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .chat-photo {
+      display: block;
+      width: 100%;
+      max-height: 420px;
+      object-fit: cover;
+      background: rgba(255,255,255,.05);
+    }
+
+    .chat-meta {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .chat-delete {
+      padding: 2px 6px;
+      border: 0;
+      color: #ffb4b4;
+      background: transparent;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .chat-compose {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(8,32,39,.9);
+    }
+
+    .chat-compose-row {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .chat-textarea {
+      min-height: 48px;
+      max-height: 150px;
+      resize: vertical;
+    }
+
+    .chat-attach-label {
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      background: rgba(255,255,255,.07);
+      cursor: pointer;
+      font-size: 21px;
+      touch-action: manipulation;
+    }
+
+    .chat-send-button {
+      width: auto;
+      min-width: 100px;
+      margin: 0;
+    }
+
+    .chat-selected-file {
+      margin-top: 9px;
+      color: var(--muted);
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+
+    .chat-empty {
+      min-height: 300px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    @media (max-width: 620px) {
+      .chat-shell {
+        grid-template-rows: minmax(350px, 58vh) auto;
+      }
+
+      .chat-messages {
+        padding: 10px;
+      }
+
+      .chat-bubble {
+        width: 88%;
+      }
+
+      .chat-compose {
+        padding: 10px;
+      }
+
+      .chat-compose-row {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        gap: 7px;
+      }
+
+      .chat-send-button {
+        min-width: 74px;
+        padding-left: 11px;
+        padding-right: 11px;
+      }
+    }
+
   </style>
 </head>
 
@@ -1492,7 +1687,46 @@
         </div>
 
         <div id="trip-tab-czat" class="trip-tab-content">
-          <div class="card placeholder-panel"><div><h2>Czat</h2><p class="muted">Tutaj powstanie czat dla uczestników i gości wyjazdu.</p></div></div>
+          <div class="tasks-toolbar">
+            <div>
+              <h2>Czat wyjazdu</h2>
+              <p class="muted">
+                Wiadomości są widoczne tylko dla osób przypisanych do tego wyjazdu.
+              </p>
+            </div>
+          </div>
+
+          <div id="chatMessage" class="message"></div>
+
+          <div class="chat-shell">
+            <div id="chatMessages" class="chat-messages">
+              <div class="chat-empty">Ładowanie czatu...</div>
+            </div>
+
+            <form id="chatForm" class="chat-compose hidden">
+              <div class="chat-compose-row">
+                <label class="chat-attach-label" for="chatPhotoInput" title="Dodaj zdjęcie">📷</label>
+                <input
+                  id="chatPhotoInput"
+                  class="photo-file-input"
+                  type="file"
+                  accept="image/*"
+                >
+
+                <textarea
+                  id="chatText"
+                  class="chat-textarea"
+                  placeholder="Napisz wiadomość..."
+                ></textarea>
+
+                <button id="chatSendButton" class="button chat-send-button" type="submit">
+                  Wyślij
+                </button>
+              </div>
+
+              <div id="chatSelectedFile" class="chat-selected-file"></div>
+            </form>
+          </div>
         </div>
       </section>
 
@@ -1616,6 +1850,9 @@
     let taskAssignableUsers = [];
     let tripPlaces = [];
     let scheduleDayPlaces = [];
+    let chatMessages = [];
+    let chatProfiles = [];
+    let chatRealtimeChannel = null;
 
     const authView = document.getElementById("authView");
     const accountView = document.getElementById("accountView");
@@ -2019,6 +2256,10 @@
 
       if (tabName === "kempingi" && selectedTrip) {
         await loadPlaces();
+      }
+
+      if (tabName === "czat" && selectedTrip) {
+        await loadChat();
       }
     }
 
@@ -2427,6 +2668,360 @@
     }
 
 
+
+
+
+    function canWriteChat() {
+      return currentProfile?.global_role === "administrator"
+        || selectedTripRole === "uczestnik";
+    }
+
+    function canDeleteChatMessage(message) {
+      return currentProfile?.global_role === "administrator"
+        || message.created_by === currentUser?.id;
+    }
+
+    function chatAuthorName(userId) {
+      const profile = chatProfiles.find(item => item.id === userId);
+      return profile ? userDisplayName(profile) : "Nieznany użytkownik";
+    }
+
+    function chatDateKey(value) {
+      const date = new Date(value);
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    }
+
+    function formatChatDay(value) {
+      const date = new Date(value);
+      const today = new Date();
+      const yesterday = new Date();
+      yesterday.setDate(today.getDate() - 1);
+
+      if (date.toDateString() === today.toDateString()) return "Dzisiaj";
+      if (date.toDateString() === yesterday.toDateString()) return "Wczoraj";
+
+      return new Intl.DateTimeFormat("pl-PL", {
+        weekday: "long",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      }).format(date);
+    }
+
+    function formatChatTime(value) {
+      return new Intl.DateTimeFormat("pl-PL", {
+        hour: "2-digit",
+        minute: "2-digit"
+      }).format(new Date(value));
+    }
+
+    async function loadChat() {
+      const messageBox = document.getElementById("chatMessage");
+      const messagesBox = document.getElementById("chatMessages");
+      const form = document.getElementById("chatForm");
+
+      if (!selectedTrip) return;
+
+      showMessage(messageBox, "Ładowanie czatu...");
+      messagesBox.innerHTML = '<div class="chat-empty">Ładowanie czatu...</div>';
+      form.classList.add("hidden");
+
+      await resolveSelectedTripRole();
+
+      if (canWriteChat()) {
+        form.classList.remove("hidden");
+      }
+
+      const [{ data: profilesData, error: profilesError }, { data: messagesData, error: messagesError }] =
+        await Promise.all([
+          client
+            .from("profiles")
+            .select("id, first_name, last_name, email"),
+          client
+            .from("trip_chat_messages")
+            .select("id, trip_id, message_text, photo_id, created_by, created_at, updated_at")
+            .eq("trip_id", selectedTrip.id)
+            .order("created_at", { ascending: true })
+        ]);
+
+      if (profilesError) {
+        showMessage(messageBox, profilesError.message, "error");
+        return;
+      }
+
+      if (messagesError) {
+        showMessage(messageBox, messagesError.message, "error");
+        return;
+      }
+
+      chatProfiles = profilesData || [];
+      chatMessages = messagesData || [];
+
+      const photoIds = chatMessages
+        .map(message => message.photo_id)
+        .filter(Boolean);
+
+      let photosById = new Map();
+
+      if (photoIds.length) {
+        const { data: photosData, error: photosError } = await client
+          .from("trip_photos")
+          .select("id, storage_path, file_name, caption")
+          .in("id", photoIds);
+
+        if (photosError) {
+          showMessage(messageBox, photosError.message, "error");
+          return;
+        }
+
+        for (const photo of photosData || []) {
+          const { data: signedData } = await client.storage
+            .from("trip-photos")
+            .createSignedUrl(photo.storage_path, 60 * 60);
+
+          photosById.set(photo.id, {
+            ...photo,
+            signedUrl: signedData?.signedUrl || ""
+          });
+        }
+      }
+
+      showMessage(messageBox, "");
+      renderChat(photosById);
+      setupChatRealtime();
+    }
+
+    function renderChat(photosById = new Map()) {
+      const messagesBox = document.getElementById("chatMessages");
+
+      if (!chatMessages.length) {
+        messagesBox.innerHTML = `
+          <div class="chat-empty">
+            Nie ma jeszcze wiadomości. Napisz pierwszą.
+          </div>
+        `;
+        return;
+      }
+
+      let previousDateKey = "";
+
+      messagesBox.innerHTML = chatMessages.map(message => {
+        const currentDateKey = chatDateKey(message.created_at);
+        const separator = currentDateKey !== previousDateKey
+          ? `<div class="chat-day-separator"><span>${escapeHtml(formatChatDay(message.created_at))}</span></div>`
+          : "";
+
+        previousDateKey = currentDateKey;
+
+        const photo = message.photo_id ? photosById.get(message.photo_id) : null;
+        const mine = message.created_by === currentUser?.id;
+
+        return `
+          ${separator}
+          <div class="chat-message-row ${mine ? "mine" : ""}">
+            <div class="chat-bubble">
+              <div class="chat-author">
+                ${escapeHtml(chatAuthorName(message.created_by))}
+              </div>
+
+              ${message.message_text ? `
+                <div class="chat-text">${escapeHtml(message.message_text)}</div>
+              ` : ""}
+
+              ${photo?.signedUrl ? `
+                <button
+                  class="chat-photo-button"
+                  type="button"
+                  onclick="openPhotoLightbox('${photo.id}', '${encodeURIComponent(photo.signedUrl)}')"
+                >
+                  <img
+                    class="chat-photo"
+                    src="${photo.signedUrl}"
+                    alt="${escapeHtml(photo.caption || photo.file_name || "Zdjęcie w czacie")}"
+                    loading="lazy"
+                  >
+                </button>
+              ` : ""}
+
+              <div class="chat-meta">
+                <span>${escapeHtml(formatChatTime(message.created_at))}</span>
+                ${canDeleteChatMessage(message) ? `
+                  <button
+                    class="chat-delete"
+                    type="button"
+                    onclick="deleteChatMessage('${message.id}')"
+                  >
+                    Usuń
+                  </button>
+                ` : ""}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      requestAnimationFrame(() => {
+        messagesBox.scrollTop = messagesBox.scrollHeight;
+      });
+    }
+
+    async function uploadChatPhoto(file) {
+      const jpegBlob = await imageFileToJpeg(file);
+      const uniqueName = `${Date.now()}-${crypto.randomUUID()}-${safePhotoBaseName(file.name)}.jpg`;
+      const storagePath = `${selectedTrip.id}/${currentUser.id}/${uniqueName}`;
+
+      const { error: uploadError } = await client.storage
+        .from("trip-photos")
+        .upload(storagePath, jpegBlob, {
+          contentType: "image/jpeg",
+          cacheControl: "3600",
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: photoData, error: photoError } = await client
+        .from("trip_photos")
+        .insert({
+          trip_id: selectedTrip.id,
+          storage_path: storagePath,
+          file_name: file.name,
+          uploaded_by: currentUser.id
+        })
+        .select("id")
+        .single();
+
+      if (photoError) {
+        await client.storage.from("trip-photos").remove([storagePath]);
+        throw photoError;
+      }
+
+      return photoData.id;
+    }
+
+    async function sendChatMessage(event) {
+      event.preventDefault();
+
+      if (!canWriteChat()) {
+        alert("Nie masz uprawnień do pisania na czacie.");
+        return;
+      }
+
+      const textArea = document.getElementById("chatText");
+      const photoInput = document.getElementById("chatPhotoInput");
+      const sendButton = document.getElementById("chatSendButton");
+      const selectedFileInfo = document.getElementById("chatSelectedFile");
+
+      const messageText = textArea.value.trim();
+      const photoFile = photoInput.files?.[0] || null;
+
+      if (!messageText && !photoFile) return;
+
+      sendButton.disabled = true;
+      sendButton.textContent = "Wysyłanie...";
+
+      try {
+        let photoId = null;
+
+        if (photoFile) {
+          selectedFileInfo.textContent = "Przygotowywanie i wysyłanie zdjęcia...";
+          photoId = await uploadChatPhoto(photoFile);
+        }
+
+        const { error } = await client
+          .from("trip_chat_messages")
+          .insert({
+            trip_id: selectedTrip.id,
+            message_text: messageText || null,
+            photo_id: photoId,
+            created_by: currentUser.id
+          });
+
+        if (error) throw error;
+
+        textArea.value = "";
+        photoInput.value = "";
+        selectedFileInfo.textContent = "";
+
+        await loadChat();
+      } catch (error) {
+        alert(error.message || "Nie udało się wysłać wiadomości.");
+      } finally {
+        sendButton.disabled = false;
+        sendButton.textContent = "Wyślij";
+      }
+    }
+
+    async function deleteChatMessage(messageId) {
+      const message = chatMessages.find(item => item.id === messageId);
+      if (!message || !canDeleteChatMessage(message)) return;
+
+      if (!confirm("Czy na pewno usunąć tę wiadomość?")) return;
+
+      const { error } = await client
+        .from("trip_chat_messages")
+        .delete()
+        .eq("id", messageId);
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      await loadChat();
+    }
+
+    function setupChatRealtime() {
+      if (chatRealtimeChannel) {
+        client.removeChannel(chatRealtimeChannel);
+        chatRealtimeChannel = null;
+      }
+
+      if (!selectedTrip) return;
+
+      chatRealtimeChannel = client
+        .channel(`trip-chat-${selectedTrip.id}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "trip_chat_messages",
+            filter: `trip_id=eq.${selectedTrip.id}`
+          },
+          async () => {
+            await loadChat();
+          }
+        )
+        .subscribe();
+    }
+
+    function setupChatControls() {
+      const form = document.getElementById("chatForm");
+      const input = document.getElementById("chatPhotoInput");
+      const selectedFileInfo = document.getElementById("chatSelectedFile");
+      const textArea = document.getElementById("chatText");
+
+      form?.addEventListener("submit", sendChatMessage);
+
+      input?.addEventListener("change", () => {
+        const file = input.files?.[0];
+        selectedFileInfo.textContent = file ? `Wybrane zdjęcie: ${file.name}` : "";
+      });
+
+      textArea?.addEventListener("keydown", event => {
+        if (event.key === "Enter" && !event.shiftKey) {
+          event.preventDefault();
+          form?.requestSubmit();
+        }
+      });
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", setupChatControls);
+    } else {
+      setupChatControls();
+    }
 
 
     function canCreatePlaces() {
