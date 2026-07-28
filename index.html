@@ -2255,6 +2255,27 @@
       }
     }
 
+  
+    .place-address-link {
+      display: inline-flex;
+      align-items: flex-start;
+      gap: 7px;
+      color: var(--accent);
+      font-weight: 800;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+      text-decoration: none;
+    }
+
+    .place-address-link:hover {
+      text-decoration: underline;
+    }
+
+    .place-address-link::before {
+      content: "📍";
+      flex: 0 0 auto;
+    }
+
   </style>
 </head>
 
@@ -3159,47 +3180,6 @@
     loginTab.addEventListener("click", () => setMode("login"));
     registerTab.addEventListener("click", () => setMode("register"));
 
-    async function getRegistrationMode() {
-      const { data, error } = await client.rpc("get_registration_mode");
-
-      if (error) {
-        console.warn("Nie udało się pobrać ustawień rejestracji:", error);
-        return {
-          auto_approve_users: false,
-          auto_assign_current_trip: false,
-          current_trip_exists: false
-        };
-      }
-
-      const settings = Array.isArray(data) ? data[0] : data;
-
-      return {
-        auto_approve_users: Boolean(settings?.auto_approve_users),
-        auto_assign_current_trip: Boolean(settings?.auto_assign_current_trip),
-        current_trip_exists: Boolean(settings?.current_trip_exists)
-      };
-    }
-
-    function registrationSuccessMessage(settings) {
-      const autoApprove = settings.auto_approve_users;
-      const autoAssign = settings.auto_assign_current_trip;
-      const hasCurrentTrip = settings.current_trip_exists;
-
-      if (autoApprove && autoAssign && hasCurrentTrip) {
-        return "Konto zostało utworzone i przypisane do aktualnego wyjazdu jako Gość. Potwierdź adres e-mail, aby się zalogować.";
-      }
-
-      if (autoApprove) {
-        return "Konto zostało utworzone i automatycznie zaakceptowane. Potwierdź adres e-mail, aby się zalogować.";
-      }
-
-      if (autoAssign && hasCurrentTrip) {
-        return "Konto zostało utworzone i przypisane do aktualnego wyjazdu jako Gość. Potwierdź adres e-mail i poczekaj na akceptację Administratora.";
-      }
-
-      return "Konto zostało utworzone. Potwierdź adres e-mail i poczekaj na akceptację Administratora.";
-    }
-
     authForm.addEventListener("submit", async event => {
       event.preventDefault();
 
@@ -3213,8 +3193,6 @@
 
       try {
         if (mode === "register") {
-          const registrationMode = await getRegistrationMode();
-
           const { data, error } = await client.auth.signUp({
             email,
             password,
@@ -3234,7 +3212,7 @@
           } else {
             showMessage(
               authMessage,
-              registrationSuccessMessage(registrationMode),
+              "Konto zostało utworzone. Sprawdź pocztę, potwierdź adres e-mail i poczekaj na akceptację administratora.",
               "success"
             );
           }
@@ -4996,6 +4974,13 @@
       return labels[type] || type;
     }
 
+    function googleMapsAddressUrl(address) {
+      const value = String(address || "").trim();
+      if (!value) return "";
+
+      return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(value)}`;
+    }
+
     function normalizeWebsiteUrl(url) {
       const value = String(url || "").trim();
       if (!value) return "";
@@ -5130,7 +5115,19 @@
               </a>
             ` : '<span class="muted">Brak</span>'}
           </td>
-          <td class="place-address">${escapeHtml(place.address || "Brak adresu")}</td>
+          <td class="place-address">
+            ${place.address ? `
+              <a
+                class="place-address-link"
+                href="${escapeHtml(googleMapsAddressUrl(place.address))}"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Otwórz adres w Google Maps"
+              >
+                ${escapeHtml(place.address)}
+              </a>
+            ` : '<span class="muted">Brak adresu</span>'}
+          </td>
           <td><span class="place-type">${escapeHtml(placeTypeLabel(place.place_type))}</span></td>
           <td>
             <div class="place-planned">
