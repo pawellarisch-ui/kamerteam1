@@ -3159,6 +3159,47 @@
     loginTab.addEventListener("click", () => setMode("login"));
     registerTab.addEventListener("click", () => setMode("register"));
 
+    async function getRegistrationMode() {
+      const { data, error } = await client.rpc("get_registration_mode");
+
+      if (error) {
+        console.warn("Nie udało się pobrać ustawień rejestracji:", error);
+        return {
+          auto_approve_users: false,
+          auto_assign_current_trip: false,
+          current_trip_exists: false
+        };
+      }
+
+      const settings = Array.isArray(data) ? data[0] : data;
+
+      return {
+        auto_approve_users: Boolean(settings?.auto_approve_users),
+        auto_assign_current_trip: Boolean(settings?.auto_assign_current_trip),
+        current_trip_exists: Boolean(settings?.current_trip_exists)
+      };
+    }
+
+    function registrationSuccessMessage(settings) {
+      const autoApprove = settings.auto_approve_users;
+      const autoAssign = settings.auto_assign_current_trip;
+      const hasCurrentTrip = settings.current_trip_exists;
+
+      if (autoApprove && autoAssign && hasCurrentTrip) {
+        return "Konto zostało utworzone i przypisane do aktualnego wyjazdu jako Gość. Potwierdź adres e-mail, aby się zalogować.";
+      }
+
+      if (autoApprove) {
+        return "Konto zostało utworzone i automatycznie zaakceptowane. Potwierdź adres e-mail, aby się zalogować.";
+      }
+
+      if (autoAssign && hasCurrentTrip) {
+        return "Konto zostało utworzone i przypisane do aktualnego wyjazdu jako Gość. Potwierdź adres e-mail i poczekaj na akceptację Administratora.";
+      }
+
+      return "Konto zostało utworzone. Potwierdź adres e-mail i poczekaj na akceptację Administratora.";
+    }
+
     authForm.addEventListener("submit", async event => {
       event.preventDefault();
 
@@ -3172,6 +3213,8 @@
 
       try {
         if (mode === "register") {
+          const registrationMode = await getRegistrationMode();
+
           const { data, error } = await client.auth.signUp({
             email,
             password,
@@ -3191,7 +3234,7 @@
           } else {
             showMessage(
               authMessage,
-              "Konto zostało utworzone. Sprawdź pocztę, potwierdź adres e-mail i poczekaj na akceptację administratora.",
+              registrationSuccessMessage(registrationMode),
               "success"
             );
           }
