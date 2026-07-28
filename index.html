@@ -4,23 +4,23 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b2f39">
-  <title>KamperTeam — logowanie</title>
+  <title>KamperTeam.eu</title>
 
   <style>
     :root {
       --bg: #071d24;
-      --panel: rgba(8, 32, 39, 0.88);
+      --panel: rgba(8, 32, 39, 0.9);
+      --panel-soft: rgba(255, 255, 255, 0.06);
       --text: #f5fbfc;
       --muted: #c8dde1;
       --accent: #f5c451;
       --line: rgba(255, 255, 255, 0.16);
       --error: #ff9f9f;
       --success: #8fe0b0;
+      --warning: #ffd889;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -33,8 +33,11 @@
         linear-gradient(145deg, #06171d 0%, #0c3b45 55%, #071d24 100%);
     }
 
+    button, input, textarea, select { font: inherit; }
+    button { cursor: pointer; }
+
     .wrap {
-      width: min(1100px, calc(100% - 32px));
+      width: min(1180px, calc(100% - 32px));
       margin: auto;
     }
 
@@ -42,7 +45,9 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 24px 0;
+      gap: 22px;
+      padding: 22px 0;
+      border-bottom: 1px solid var(--line);
     }
 
     .brand {
@@ -51,6 +56,7 @@
       align-items: center;
       font-size: 20px;
       font-weight: 800;
+      white-space: nowrap;
     }
 
     .logo {
@@ -63,27 +69,61 @@
       border: 1px solid var(--line);
     }
 
+    .nav-links {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .nav-button {
+      padding: 10px 13px;
+      border: 1px solid transparent;
+      border-radius: 11px;
+      color: var(--text);
+      background: transparent;
+      font-weight: 700;
+    }
+
+    .nav-button:hover,
+    .nav-button.active {
+      border-color: var(--line);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .nav-button.admin-link {
+      color: #17242a;
+      background: var(--accent);
+    }
+
+    .page {
+      display: none;
+      padding: 52px 0 80px;
+    }
+
+    .page.active { display: block; }
+
     .hero {
       display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
+      grid-template-columns: 1.08fr 0.92fr;
       gap: 42px;
       align-items: center;
-      padding: 50px 0 80px;
     }
 
     h1 {
       margin: 0 0 22px;
-      font-size: clamp(48px, 7vw, 88px);
-      line-height: 0.95;
+      font-size: clamp(46px, 7vw, 84px);
+      line-height: 0.96;
       letter-spacing: -3px;
     }
 
-    h1 span {
-      color: var(--accent);
-    }
+    h1 span { color: var(--accent); }
+
+    h2 { margin-top: 0; }
 
     .lead {
-      max-width: 700px;
+      max-width: 720px;
       color: var(--muted);
       font-size: 20px;
       line-height: 1.6;
@@ -92,22 +132,22 @@
     .card {
       padding: 28px;
       border: 1px solid var(--line);
-      border-radius: 26px;
+      border-radius: 24px;
       background: var(--panel);
-      box-shadow: 0 28px 80px rgba(0, 0, 0, 0.32);
+      box-shadow: 0 28px 80px rgba(0, 0, 0, 0.28);
       backdrop-filter: blur(14px);
     }
 
-    .card h2 {
-      margin: 0 0 8px;
-      font-size: 30px;
+    .card + .card { margin-top: 22px; }
+
+    .subtitle,
+    .small,
+    .muted {
+      color: var(--muted);
+      line-height: 1.55;
     }
 
-    .subtitle {
-      margin: 0 0 24px;
-      color: var(--muted);
-      line-height: 1.5;
-    }
+    .small { font-size: 13px; }
 
     .tabs {
       display: grid;
@@ -123,7 +163,6 @@
       color: var(--text);
       background: rgba(255, 255, 255, 0.05);
       font-weight: 700;
-      cursor: pointer;
     }
 
     .tab.active {
@@ -139,40 +178,50 @@
       font-weight: 700;
     }
 
-    input {
+    input, textarea, select {
       width: 100%;
-      padding: 14px;
+      padding: 13px 14px;
       border: 1px solid var(--line);
       border-radius: 12px;
       outline: none;
       color: var(--text);
       background: rgba(255, 255, 255, 0.07);
-      font-size: 16px;
     }
 
-    input:focus {
-      border-color: var(--accent);
-    }
+    select option { color: #17242a; }
+    textarea { min-height: 100px; resize: vertical; }
+    input:focus, textarea:focus, select:focus { border-color: var(--accent); }
 
-    .submit,
-    .logout {
-      width: 100%;
-      margin-top: 20px;
-      padding: 14px;
+    .button {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
       border: 0;
       border-radius: 12px;
       color: #17242a;
       background: var(--accent);
-      font-size: 16px;
       font-weight: 800;
-      cursor: pointer;
     }
 
-    .logout {
+    .button.secondary {
       color: var(--text);
       background: rgba(255, 255, 255, 0.09);
       border: 1px solid var(--line);
     }
+
+    .button.danger {
+      color: #fff;
+      background: rgba(189, 55, 55, 0.75);
+    }
+
+    .button.small-button {
+      padding: 8px 10px;
+      font-size: 13px;
+    }
+
+    .full { width: 100%; margin-top: 20px; }
 
     .message {
       min-height: 24px;
@@ -180,43 +229,119 @@
       line-height: 1.45;
     }
 
-    .message.error {
-      color: var(--error);
-    }
+    .message.error { color: var(--error); }
+    .message.success { color: var(--success); }
+    .message.warning { color: var(--warning); }
 
-    .message.success {
-      color: var(--success);
-    }
+    .hidden { display: none !important; }
 
-    .hidden {
-      display: none;
-    }
-
-    .user-email {
-      padding: 14px;
-      margin: 18px 0;
+    .status-box {
+      padding: 16px;
       border: 1px solid var(--line);
-      border-radius: 12px;
+      border-radius: 14px;
+      background: var(--panel-soft);
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+
+    .section-header h1 {
+      font-size: clamp(38px, 5vw, 62px);
+      margin-bottom: 10px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .trip-card {
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel-soft);
+    }
+
+    .trip-card h3 { margin: 0 0 10px; }
+
+    .trip-meta {
+      margin: 12px 0;
       color: var(--accent);
-      background: rgba(255, 255, 255, 0.05);
-      overflow-wrap: anywhere;
+      font-size: 14px;
+      font-weight: 700;
     }
 
-    .small {
-      color: var(--muted);
+    .two-columns {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      vertical-align: middle;
+    }
+
+    th {
+      color: var(--accent);
       font-size: 13px;
-      line-height: 1.5;
     }
 
-    @media (max-width: 820px) {
-      .hero {
+    .actions {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 5px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .admin-panels {
+      display: grid;
+      gap: 22px;
+    }
+
+    @media (max-width: 900px) {
+      .hero,
+      .two-columns,
+      .grid {
         grid-template-columns: 1fr;
-        padding-top: 20px;
       }
 
-      h1 {
-        letter-spacing: -2px;
+      nav {
+        align-items: flex-start;
+        flex-direction: column;
       }
+
+      .nav-links { justify-content: flex-start; }
     }
   </style>
 </head>
@@ -228,73 +353,186 @@
         <div class="logo">🚐</div>
         KamperTeam.eu
       </div>
-      <div id="navStatus">Gość</div>
+
+      <div class="nav-links">
+        <button class="nav-button active" data-page="home">O stronie</button>
+        <button class="nav-button" data-page="trips">Wypady</button>
+        <button class="nav-button" data-page="contact">Kontakt</button>
+        <button class="nav-button admin-link hidden" id="adminNav" data-page="admin">Panel administratora</button>
+        <button class="nav-button hidden" id="logoutNav">Wyloguj</button>
+        <span id="navStatus" class="badge">Gość</span>
+      </div>
     </nav>
 
-    <main class="hero">
-      <section>
-        <h1>Witaj w <span>KamperTeam</span></h1>
-        <p class="lead">
-          Zaloguj się lub utwórz konto, aby korzystać z prywatnej części portalu,
-          wspólnych planów podróży, tras, campingów i galerii.
-        </p>
-      </section>
-
-      <section class="card">
-        <div id="authView">
-          <h2 id="formTitle">Logowanie</h2>
-          <p class="subtitle" id="formSubtitle">
-            Wpisz adres e-mail i hasło.
-          </p>
-
-          <div class="tabs">
-            <button class="tab active" id="loginTab" type="button">Logowanie</button>
-            <button class="tab" id="registerTab" type="button">Rejestracja</button>
+    <main>
+      <section id="page-home" class="page active">
+        <div class="hero">
+          <div>
+            <h1>Witaj w <span>KamperTeam</span></h1>
+            <p class="lead">
+              Prywatne miejsce do organizowania wspólnych wyjazdów kamperowych,
+              planowania tras i dzielenia się informacjami z uczestnikami.
+            </p>
           </div>
 
-          <form id="authForm">
-            <label for="email">Adres e-mail</label>
-            <input
-              id="email"
-              type="email"
-              autocomplete="email"
-              required
-              placeholder="twoj@email.pl"
-            >
+          <div class="card" id="authCard">
+            <div id="authView">
+              <h2 id="formTitle">Logowanie</h2>
+              <p class="subtitle" id="formSubtitle">Wpisz adres e-mail i hasło.</p>
 
-            <label for="password">Hasło</label>
-            <input
-              id="password"
-              type="password"
-              autocomplete="current-password"
-              minlength="6"
-              required
-              placeholder="Minimum 6 znaków"
-            >
+              <div class="tabs">
+                <button class="tab active" id="loginTab" type="button">Logowanie</button>
+                <button class="tab" id="registerTab" type="button">Rejestracja</button>
+              </div>
 
-            <button class="submit" id="submitButton" type="submit">
-              Zaloguj się
-            </button>
-          </form>
+              <form id="authForm">
+                <div id="nameFields" class="hidden">
+                  <label for="firstName">Imię</label>
+                  <input id="firstName" type="text" autocomplete="given-name" placeholder="Imię">
 
-          <div id="message" class="message"></div>
+                  <label for="lastName">Nazwisko</label>
+                  <input id="lastName" type="text" autocomplete="family-name" placeholder="Nazwisko">
+                </div>
 
-          <p class="small">
-            Przy rejestracji otrzymasz e-mail z linkiem potwierdzającym konto.
-          </p>
+                <label for="email">Adres e-mail</label>
+                <input id="email" type="email" autocomplete="email" required placeholder="twoj@email.pl">
+
+                <label for="password">Hasło</label>
+                <input id="password" type="password" autocomplete="current-password" minlength="6" required placeholder="Minimum 6 znaków">
+
+                <button class="button full" id="submitButton" type="submit">Zaloguj się</button>
+              </form>
+
+              <div id="authMessage" class="message"></div>
+              <p class="small">Nowe konto może wymagać potwierdzenia adresu e-mail i akceptacji administratora.</p>
+            </div>
+
+            <div id="accountView" class="hidden">
+              <h2 id="accountTitle">Twoje konto</h2>
+              <p id="accountText" class="subtitle"></p>
+              <div id="accountEmail" class="status-box"></div>
+              <button class="button secondary full" id="logoutButton" type="button">Wyloguj się</button>
+            </div>
+
+            <div id="passwordChangeView" class="hidden">
+              <h2>Ustaw nowe hasło</h2>
+              <p class="subtitle">Administrator wymusił zmianę hasła. Zmień je, aby przejść dalej.</p>
+              <form id="passwordChangeForm">
+                <label for="newPassword">Nowe hasło</label>
+                <input id="newPassword" type="password" minlength="8" required placeholder="Minimum 8 znaków">
+                <label for="newPasswordRepeat">Powtórz nowe hasło</label>
+                <input id="newPasswordRepeat" type="password" minlength="8" required placeholder="Powtórz hasło">
+                <button class="button full" type="submit">Zapisz nowe hasło</button>
+              </form>
+              <div id="passwordMessage" class="message"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-trips" class="page">
+        <div class="section-header">
+          <div>
+            <h1>Wypady</h1>
+            <p class="lead">Tutaj zobaczysz wyjazdy, do których masz dostęp.</p>
+          </div>
+        </div>
+        <div id="tripsMessage" class="message"></div>
+        <div id="tripsGrid" class="grid"></div>
+      </section>
+
+      <section id="page-contact" class="page">
+        <div class="section-header">
+          <div>
+            <h1>Kontakt</h1>
+            <p class="lead">Sekcja kontaktowa portalu KamperTeam.eu.</p>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Kontakt z administratorem</h2>
+          <p class="muted">Dane kontaktowe uzupełnimy w kolejnym etapie.</p>
+        </div>
+      </section>
+
+      <section id="page-admin" class="page">
+        <div class="section-header">
+          <div>
+            <h1>Panel administratora</h1>
+            <p class="lead">Tworzenie wyjazdów oraz podstawowe zarządzanie użytkownikami.</p>
+          </div>
         </div>
 
-        <div id="userView" class="hidden">
-          <h2>Jesteś zalogowany</h2>
-          <p class="subtitle">
-            Twoja sesja pozostanie aktywna również po odświeżeniu strony.
-          </p>
+        <div id="adminDenied" class="card hidden">
+          <h2>Brak dostępu</h2>
+          <p class="muted">Ta część strony jest dostępna tylko dla administratora.</p>
+        </div>
 
-          <div class="user-email" id="userEmail"></div>
+        <div id="adminContent" class="admin-panels hidden">
+          <div class="two-columns">
+            <div class="card">
+              <h2>Nowy wyjazd</h2>
+              <form id="tripForm">
+                <label for="tripTitle">Nazwa wyjazdu</label>
+                <input id="tripTitle" required placeholder="np. Dania 2026">
 
-          <button class="logout" id="logoutButton" type="button">
-            Wyloguj się
-          </button>
+                <label for="tripDescription">Krótki opis</label>
+                <textarea id="tripDescription" placeholder="Podstawowe informacje o wyjeździe"></textarea>
+
+                <label for="tripStart">Data rozpoczęcia</label>
+                <input id="tripStart" type="date">
+
+                <label for="tripEnd">Data zakończenia</label>
+                <input id="tripEnd" type="date">
+
+                <button class="button full" type="submit">Utwórz wyjazd</button>
+              </form>
+              <div id="tripFormMessage" class="message"></div>
+            </div>
+
+            <div class="card">
+              <h2>Przypisz osobę do wyjazdu</h2>
+              <form id="assignForm">
+                <label for="assignTrip">Wyjazd</label>
+                <select id="assignTrip" required></select>
+
+                <label for="assignUser">Użytkownik</label>
+                <select id="assignUser" required></select>
+
+                <label for="assignRole">Rola w wyjeździe</label>
+                <select id="assignRole" required>
+                  <option value="uczestnik">Uczestnik</option>
+                  <option value="gosc">Gość</option>
+                </select>
+
+                <button class="button full" type="submit">Zapisz przydział</button>
+              </form>
+              <div id="assignMessage" class="message"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Użytkownicy</h2>
+            <div id="usersMessage" class="message"></div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Użytkownik</th>
+                    <th>E-mail</th>
+                    <th>Status</th>
+                    <th>Rola globalna</th>
+                    <th>Operacje</th>
+                  </tr>
+                </thead>
+                <tbody id="usersTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Utworzone wyjazdy</h2>
+            <div id="adminTripsGrid" class="grid"></div>
+          </div>
         </div>
       </section>
     </main>
@@ -305,76 +543,189 @@
   <script>
     const SUPABASE_URL = "https://xzorbvkwfeaypuweptec.supabase.co";
     const SUPABASE_KEY = "sb_publishable_iBl7YOQZ14XNHF5vflZhdA_6l5U6-Uo";
-
-    const client = window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_KEY
-    );
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let mode = "login";
+    let currentUser = null;
+    let currentProfile = null;
+    let adminTrips = [];
+    let adminUsers = [];
 
     const authView = document.getElementById("authView");
-    const userView = document.getElementById("userView");
+    const accountView = document.getElementById("accountView");
+    const passwordChangeView = document.getElementById("passwordChangeView");
     const loginTab = document.getElementById("loginTab");
     const registerTab = document.getElementById("registerTab");
+    const nameFields = document.getElementById("nameFields");
     const formTitle = document.getElementById("formTitle");
     const formSubtitle = document.getElementById("formSubtitle");
     const authForm = document.getElementById("authForm");
     const submitButton = document.getElementById("submitButton");
-    const message = document.getElementById("message");
-    const userEmail = document.getElementById("userEmail");
+    const authMessage = document.getElementById("authMessage");
+    const accountTitle = document.getElementById("accountTitle");
+    const accountText = document.getElementById("accountText");
+    const accountEmail = document.getElementById("accountEmail");
     const navStatus = document.getElementById("navStatus");
+    const adminNav = document.getElementById("adminNav");
+    const logoutNav = document.getElementById("logoutNav");
     const logoutButton = document.getElementById("logoutButton");
 
-    function showMessage(text, type = "") {
-      message.textContent = text;
-      message.className = `message ${type}`;
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function showMessage(element, text, type = "") {
+      element.textContent = text;
+      element.className = `message ${type}`;
+    }
+
+    function formatDate(value) {
+      if (!value) return "brak daty";
+      return new Date(`${value}T12:00:00`).toLocaleDateString("pl-PL");
+    }
+
+    function userDisplayName(profile) {
+      const name = `${profile?.first_name || ""} ${profile?.last_name || ""}`.trim();
+      return name || profile?.email || "Użytkownik";
     }
 
     function setMode(newMode) {
       mode = newMode;
-      showMessage("");
-
+      showMessage(authMessage, "");
       const isLogin = mode === "login";
 
       loginTab.classList.toggle("active", isLogin);
       registerTab.classList.toggle("active", !isLogin);
-
+      nameFields.classList.toggle("hidden", isLogin);
       formTitle.textContent = isLogin ? "Logowanie" : "Utwórz konto";
       formSubtitle.textContent = isLogin
         ? "Wpisz adres e-mail i hasło."
-        : "Załóż konto w portalu KamperTeam.";
-
-      submitButton.textContent = isLogin
-        ? "Zaloguj się"
-        : "Zarejestruj się";
+        : "Załóż konto i poczekaj na akceptację administratora.";
+      submitButton.textContent = isLogin ? "Zaloguj się" : "Zarejestruj się";
+      document.getElementById("password").autocomplete = isLogin ? "current-password" : "new-password";
     }
 
-    function renderUser(user) {
-      if (user) {
-        authView.classList.add("hidden");
-        userView.classList.remove("hidden");
-        userEmail.textContent = user.email || "Użytkownik";
-        navStatus.textContent = "Zalogowany";
-      } else {
-        userView.classList.add("hidden");
-        authView.classList.remove("hidden");
-        userEmail.textContent = "";
-        navStatus.textContent = "Gość";
+    function showPage(pageName) {
+      if (pageName === "admin" && currentProfile?.global_role !== "administrator") {
+        pageName = "home";
       }
+
+      document.querySelectorAll(".page").forEach(page => page.classList.remove("active"));
+      document.querySelectorAll("[data-page]").forEach(button => button.classList.remove("active"));
+
+      document.getElementById(`page-${pageName}`).classList.add("active");
+      document.querySelectorAll(`[data-page="${pageName}"]`).forEach(button => button.classList.add("active"));
+
+      if (pageName === "trips") loadTrips();
+      if (pageName === "admin") loadAdminPanel();
+    }
+
+    document.querySelectorAll("[data-page]").forEach(button => {
+      button.addEventListener("click", () => showPage(button.dataset.page));
+    });
+
+    async function fetchProfile(userId) {
+      const { data, error } = await client
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    }
+
+    async function renderSession(user) {
+      currentUser = user;
+      currentProfile = null;
+      adminNav.classList.add("hidden");
+      logoutNav.classList.toggle("hidden", !user);
+
+      if (!user) {
+        authView.classList.remove("hidden");
+        accountView.classList.add("hidden");
+        passwordChangeView.classList.add("hidden");
+        navStatus.textContent = "Gość";
+        showPage("home");
+        return;
+      }
+
+      authView.classList.add("hidden");
+      accountView.classList.remove("hidden");
+      accountEmail.textContent = user.email || "Użytkownik";
+      navStatus.textContent = "Sprawdzanie konta...";
+
+      try {
+        currentProfile = await fetchProfile(user.id);
+      } catch (error) {
+        accountTitle.textContent = "Brak profilu użytkownika";
+        accountText.textContent = "Nie udało się odczytać profilu. Skontaktuj się z administratorem.";
+        navStatus.textContent = "Błąd profilu";
+        return;
+      }
+
+      const isAdmin = currentProfile.global_role === "administrator";
+      const isActive = currentProfile.status === "active";
+
+      adminNav.classList.toggle("hidden", !isAdmin || !isActive);
+      navStatus.textContent = isAdmin ? "Administrator" : userDisplayName(currentProfile);
+
+      if (currentProfile.must_change_password) {
+        authView.classList.add("hidden");
+        accountView.classList.add("hidden");
+        passwordChangeView.classList.remove("hidden");
+        showPage("home");
+        return;
+      }
+
+      passwordChangeView.classList.add("hidden");
+      accountView.classList.remove("hidden");
+
+      if (currentProfile.status === "pending") {
+        accountTitle.textContent = "Konto oczekuje na akceptację";
+        accountText.textContent = "Administrator musi zaakceptować konto. Po akceptacji uzyskasz dostęp do strony.";
+        showPage("home");
+        return;
+      }
+
+      if (currentProfile.status === "blocked") {
+        accountTitle.textContent = "Konto jest zablokowane";
+        accountText.textContent = "Skontaktuj się z administratorem strony.";
+        showPage("home");
+        return;
+      }
+
+      if (currentProfile.status !== "active") {
+        accountTitle.textContent = "Konto nie jest aktywne";
+        accountText.textContent = `Aktualny status: ${currentProfile.status}`;
+        showPage("home");
+        return;
+      }
+
+      accountTitle.textContent = `Witaj, ${userDisplayName(currentProfile)}`;
+      accountText.textContent = isAdmin
+        ? "Masz pełny dostęp administracyjny do portalu."
+        : "Konto jest aktywne. W zakładce Wypady zobaczysz przypisane wyjazdy.";
     }
 
     loginTab.addEventListener("click", () => setMode("login"));
     registerTab.addEventListener("click", () => setMode("register"));
 
-    authForm.addEventListener("submit", async (event) => {
+    authForm.addEventListener("submit", async event => {
       event.preventDefault();
 
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
+      const firstName = document.getElementById("firstName").value.trim();
+      const lastName = document.getElementById("lastName").value.trim();
 
       submitButton.disabled = true;
-      showMessage("Proszę czekać...");
+      showMessage(authMessage, "Proszę czekać...");
 
       try {
         if (mode === "register") {
@@ -382,56 +733,334 @@
             email,
             password,
             options: {
-              emailRedirectTo: "https://kamperteam.eu"
+              emailRedirectTo: "https://kamperteam.eu",
+              data: {
+                first_name: firstName,
+                last_name: lastName
+              }
             }
           });
 
           if (error) throw error;
 
           if (data.session) {
-            renderUser(data.user);
+            await renderSession(data.user);
           } else {
             showMessage(
-              "Konto zostało utworzone. Sprawdź pocztę i kliknij link potwierdzający.",
+              authMessage,
+              "Konto zostało utworzone. Sprawdź pocztę, potwierdź adres e-mail i poczekaj na akceptację administratora.",
               "success"
             );
           }
         } else {
-          const { data, error } = await client.auth.signInWithPassword({
-            email,
-            password
-          });
-
+          const { data, error } = await client.auth.signInWithPassword({ email, password });
           if (error) throw error;
-
-          renderUser(data.user);
           authForm.reset();
+          await renderSession(data.user);
         }
       } catch (error) {
-        showMessage(error.message || "Wystąpił błąd.", "error");
+        showMessage(authMessage, error.message || "Wystąpił błąd.", "error");
       } finally {
         submitButton.disabled = false;
       }
     });
 
-    logoutButton.addEventListener("click", async () => {
+    async function logout() {
       const { error } = await client.auth.signOut();
+      if (error) {
+        alert(error.message);
+        return;
+      }
+      setMode("login");
+      await renderSession(null);
+    }
+
+    logoutButton.addEventListener("click", logout);
+    logoutNav.addEventListener("click", logout);
+
+    document.getElementById("passwordChangeForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      const password = document.getElementById("newPassword").value;
+      const repeated = document.getElementById("newPasswordRepeat").value;
+      const passwordMessage = document.getElementById("passwordMessage");
+
+      if (password !== repeated) {
+        showMessage(passwordMessage, "Hasła nie są identyczne.", "error");
+        return;
+      }
+
+      showMessage(passwordMessage, "Zapisywanie...");
+
+      try {
+        const { error: passwordError } = await client.auth.updateUser({ password });
+        if (passwordError) throw passwordError;
+
+        const { error: profileError } = await client
+          .from("profiles")
+          .update({ must_change_password: false, updated_at: new Date().toISOString() })
+          .eq("id", currentUser.id);
+
+        if (profileError) throw profileError;
+
+        showMessage(passwordMessage, "Hasło zostało zmienione.", "success");
+        currentProfile.must_change_password = false;
+        await renderSession(currentUser);
+      } catch (error) {
+        showMessage(passwordMessage, error.message || "Nie udało się zmienić hasła.", "error");
+      }
+    });
+
+    async function loadTrips() {
+      const grid = document.getElementById("tripsGrid");
+      const message = document.getElementById("tripsMessage");
+      grid.innerHTML = "";
+
+      if (!currentUser || currentProfile?.status !== "active") {
+        showMessage(message, "Zaloguj się na aktywne konto, aby zobaczyć wyjazdy.", "warning");
+        return;
+      }
+
+      showMessage(message, "Ładowanie wyjazdów...");
+
+      const { data, error } = await client
+        .from("trips")
+        .select("id, title, description, start_date, end_date, created_at")
+        .order("start_date", { ascending: true, nullsFirst: false });
+
+      if (error) {
+        showMessage(message, error.message, "error");
+        return;
+      }
+
+      if (!data?.length) {
+        showMessage(
+          message,
+          currentProfile.global_role === "administrator"
+            ? "Nie utworzono jeszcze żadnego wyjazdu."
+            : "Nie jesteś jeszcze przypisany do żadnego wyjazdu.",
+          "warning"
+        );
+        return;
+      }
+
+      showMessage(message, "");
+      grid.innerHTML = data.map(trip => `
+        <article class="trip-card">
+          <h3>${escapeHtml(trip.title)}</h3>
+          <div class="trip-meta">${formatDate(trip.start_date)} – ${formatDate(trip.end_date)}</div>
+          <p class="muted">${escapeHtml(trip.description || "Brak dodatkowego opisu.")}</p>
+          <span class="badge">Szczegóły wyjazdu dodamy później</span>
+        </article>
+      `).join("");
+    }
+
+    async function loadAdminPanel() {
+      const isAdmin = currentProfile?.global_role === "administrator" && currentProfile?.status === "active";
+      document.getElementById("adminDenied").classList.toggle("hidden", isAdmin);
+      document.getElementById("adminContent").classList.toggle("hidden", !isAdmin);
+      if (!isAdmin) return;
+
+      await Promise.all([loadAdminTrips(), loadAdminUsers()]);
+      fillAssignmentSelects();
+    }
+
+    async function loadAdminTrips() {
+      const grid = document.getElementById("adminTripsGrid");
+      grid.innerHTML = "";
+
+      const { data, error } = await client
+        .from("trips")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        grid.innerHTML = `<p class="message error">${escapeHtml(error.message)}</p>`;
+        return;
+      }
+
+      adminTrips = data || [];
+
+      if (!adminTrips.length) {
+        grid.innerHTML = '<p class="muted">Nie ma jeszcze żadnych wyjazdów.</p>';
+        return;
+      }
+
+      grid.innerHTML = adminTrips.map(trip => `
+        <article class="trip-card">
+          <h3>${escapeHtml(trip.title)}</h3>
+          <div class="trip-meta">${formatDate(trip.start_date)} – ${formatDate(trip.end_date)}</div>
+          <p class="muted">${escapeHtml(trip.description || "Brak opisu.")}</p>
+          <button class="button danger small-button" onclick="deleteTrip('${trip.id}')">Usuń wyjazd</button>
+        </article>
+      `).join("");
+    }
+
+    async function loadAdminUsers() {
+      const tbody = document.getElementById("usersTableBody");
+      const message = document.getElementById("usersMessage");
+      tbody.innerHTML = "";
+      showMessage(message, "Ładowanie użytkowników...");
+
+      const { data, error } = await client
+        .from("profiles")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        showMessage(message, error.message, "error");
+        return;
+      }
+
+      adminUsers = data || [];
+      showMessage(message, "");
+
+      tbody.innerHTML = adminUsers.map(profile => {
+        const isSelf = profile.id === currentUser.id;
+        return `
+          <tr>
+            <td>${escapeHtml(userDisplayName(profile))}</td>
+            <td>${escapeHtml(profile.email || "")}</td>
+            <td><span class="badge">${escapeHtml(profile.status)}</span></td>
+            <td>${profile.global_role === "administrator" ? "Administrator" : "Użytkownik"}</td>
+            <td>
+              <div class="actions">
+                ${profile.status !== "active" ? `<button class="button small-button" onclick="setUserStatus('${profile.id}', 'active')">Aktywuj</button>` : ""}
+                ${!isSelf && profile.status !== "blocked" ? `<button class="button secondary small-button" onclick="setUserStatus('${profile.id}', 'blocked')">Zablokuj</button>` : ""}
+                ${!isSelf ? `<button class="button secondary small-button" onclick="forcePasswordChange('${profile.id}')">Wymuś hasło</button>` : ""}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function fillAssignmentSelects() {
+      const tripSelect = document.getElementById("assignTrip");
+      const userSelect = document.getElementById("assignUser");
+
+      tripSelect.innerHTML = adminTrips.length
+        ? adminTrips.map(trip => `<option value="${trip.id}">${escapeHtml(trip.title)}</option>`).join("")
+        : '<option value="">Najpierw utwórz wyjazd</option>';
+
+      const assignableUsers = adminUsers.filter(user => user.global_role !== "administrator" && user.status === "active");
+      userSelect.innerHTML = assignableUsers.length
+        ? assignableUsers.map(user => `<option value="${user.id}">${escapeHtml(userDisplayName(user))} — ${escapeHtml(user.email || "")}</option>`).join("")
+        : '<option value="">Brak aktywnych użytkowników</option>';
+    }
+
+    document.getElementById("tripForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      const message = document.getElementById("tripFormMessage");
+      const title = document.getElementById("tripTitle").value.trim();
+      const description = document.getElementById("tripDescription").value.trim();
+      const startDate = document.getElementById("tripStart").value || null;
+      const endDate = document.getElementById("tripEnd").value || null;
+
+      if (startDate && endDate && endDate < startDate) {
+        showMessage(message, "Data zakończenia nie może być wcześniejsza od rozpoczęcia.", "error");
+        return;
+      }
+
+      showMessage(message, "Tworzenie wyjazdu...");
+
+      const { error } = await client.from("trips").insert({
+        title,
+        description: description || null,
+        start_date: startDate,
+        end_date: endDate,
+        created_by: currentUser.id
+      });
+
+      if (error) {
+        showMessage(message, error.message, "error");
+        return;
+      }
+
+      event.target.reset();
+      showMessage(message, "Wyjazd został utworzony.", "success");
+      await loadAdminTrips();
+      fillAssignmentSelects();
+    });
+
+    document.getElementById("assignForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      const message = document.getElementById("assignMessage");
+      const tripId = document.getElementById("assignTrip").value;
+      const userId = document.getElementById("assignUser").value;
+      const role = document.getElementById("assignRole").value;
+
+      if (!tripId || !userId) {
+        showMessage(message, "Wybierz wyjazd i użytkownika.", "error");
+        return;
+      }
+
+      showMessage(message, "Zapisywanie przydziału...");
+
+      const { error } = await client
+        .from("trip_members")
+        .upsert({
+          trip_id: tripId,
+          user_id: userId,
+          role,
+          assigned_by: currentUser.id
+        }, { onConflict: "trip_id,user_id" });
+
+      if (error) {
+        showMessage(message, error.message, "error");
+        return;
+      }
+
+      showMessage(message, "Użytkownik został przypisany do wyjazdu.", "success");
+    });
+
+    window.setUserStatus = async function(userId, status) {
+      const { error } = await client
+        .from("profiles")
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq("id", userId);
 
       if (error) {
         alert(error.message);
         return;
       }
 
-      renderUser(null);
-      setMode("login");
+      await loadAdminUsers();
+      fillAssignmentSelects();
+    };
+
+    window.forcePasswordChange = async function(userId) {
+      const { error } = await client
+        .from("profiles")
+        .update({ must_change_password: true, updated_at: new Date().toISOString() })
+        .eq("id", userId);
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      alert("Przy następnym logowaniu użytkownik będzie musiał ustawić nowe hasło.");
+    };
+
+    window.deleteTrip = async function(tripId) {
+      if (!confirm("Czy na pewno usunąć ten wyjazd?")) return;
+
+      const { error } = await client.from("trips").delete().eq("id", tripId);
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      await loadAdminTrips();
+      fillAssignmentSelects();
+    };
+
+    client.auth.getSession().then(async ({ data }) => {
+      await renderSession(data.session?.user ?? null);
     });
 
-    client.auth.getSession().then(({ data }) => {
-      renderUser(data.session?.user ?? null);
-    });
-
-    client.auth.onAuthStateChange((_event, session) => {
-      renderUser(session?.user ?? null);
+    client.auth.onAuthStateChange(async (_event, session) => {
+      await renderSession(session?.user ?? null);
     });
   </script>
 </body>
