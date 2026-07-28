@@ -1645,6 +1645,110 @@
       }
     }
 
+  
+    .install-guide {
+      display: grid;
+      gap: 18px;
+      max-width: 860px;
+    }
+
+    .install-steps {
+      display: grid;
+      gap: 12px;
+      counter-reset: install-step;
+    }
+
+    .install-step {
+      position: relative;
+      padding: 18px 18px 18px 64px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255,255,255,.04);
+      line-height: 1.55;
+    }
+
+    .install-step::before {
+      counter-increment: install-step;
+      content: counter(install-step);
+      position: absolute;
+      left: 16px;
+      top: 16px;
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: #17242a;
+      background: var(--accent);
+      font-weight: 900;
+    }
+
+    .install-step strong {
+      color: var(--accent);
+    }
+
+    .install-note {
+      padding: 16px;
+      border: 1px solid rgba(245,196,81,.42);
+      border-radius: 14px;
+      color: var(--muted);
+      background: rgba(245,196,81,.08);
+      line-height: 1.55;
+    }
+
+    @media (max-width: 620px) {
+      .install-step {
+        padding-left: 56px;
+      }
+    }
+
+  
+    .admin-settings-box {
+      margin-bottom: 22px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255,255,255,.04);
+    }
+
+    .admin-setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .admin-setting-copy {
+      max-width: 720px;
+    }
+
+    .admin-setting-copy h3 {
+      margin: 0 0 6px;
+    }
+
+    .admin-setting-copy p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .admin-switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text);
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .admin-switch input {
+      width: 22px;
+      height: 22px;
+      margin: 0;
+      accent-color: var(--accent);
+    }
+
   </style>
 </head>
 
@@ -2132,7 +2236,27 @@
           </div>
 
           <div class="card">
-            <h2>Użytkownicy</h2>
+            
+        <section class="admin-settings-box">
+          <div class="admin-setting-row">
+            <div class="admin-setting-copy">
+              <h3>Automatyczna akceptacja nowych kont</h3>
+              <p>
+                Po włączeniu nowe konta od razu otrzymają status aktywny.
+                Nadal nie zobaczą żadnego wyjazdu, dopóki Administrator ich nie przypisze.
+              </p>
+            </div>
+
+            <label class="admin-switch">
+              <input id="autoApproveUsersCheckbox" type="checkbox">
+              Automatycznie akceptuj
+            </label>
+          </div>
+
+          <div id="adminSettingsMessage" class="message"></div>
+        </section>
+
+        <h2>Użytkownicy</h2>
             <div id="usersMessage" class="message"></div>
             <div class="table-wrap">
               <table>
@@ -2156,6 +2280,52 @@
           </div>
         </div>
       </section>
+    
+      <section id="page-install" class="page">
+        <div class="section-header">
+          <div>
+            <h1>Aplikacja KamperTeam na iPhone</h1>
+            <p class="lead">
+              Dodaj KamperTeam do ekranu początkowego i uruchamiaj portal jak zwykłą aplikację.
+            </p>
+          </div>
+        </div>
+
+        <div class="install-guide">
+          <div class="install-steps">
+            <div class="install-step">
+              Otwórz aplikację <strong>Safari</strong> na iPhonie.
+            </div>
+
+            <div class="install-step">
+              Wejdź na stronę <strong>kamperteam.eu</strong>.
+            </div>
+
+            <div class="install-step">
+              Naciśnij przycisk <strong>Udostępnij</strong>. W zależności od układu Safari
+              może być widoczny bezpośrednio na pasku albo w menu „Więcej”.
+            </div>
+
+            <div class="install-step">
+              Przewiń listę i wybierz <strong>Dodaj do ekranu początkowego</strong>.
+            </div>
+
+            <div class="install-step">
+              Włącz opcję <strong>Otwórz jako aplikację</strong>.
+            </div>
+
+            <div class="install-step">
+              Naciśnij <strong>Dodaj</strong>. Ikona KamperTeam pojawi się na ekranie iPhone’a.
+            </div>
+          </div>
+
+          <div class="install-note">
+            Gdy nie widzisz opcji „Dodaj do ekranu początkowego”, przewiń menu udostępniania
+            na sam dół, wybierz „Edytuj czynności” i dodaj tę opcję do listy.
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
 
@@ -5170,7 +5340,117 @@
     }
 
 
+
+    async function loadAdminSettings() {
+      const checkbox = document.getElementById("autoApproveUsersCheckbox");
+      const message = document.getElementById("adminSettingsMessage");
+
+      if (!checkbox || currentProfile?.global_role !== "administrator") return;
+
+      showMessage(message, "Ładowanie ustawień...");
+
+      const { data, error } = await client
+        .from("app_settings")
+        .select("auto_approve_users")
+        .eq("id", 1)
+        .single();
+
+      if (error) {
+        showMessage(message, error.message, "error");
+        return;
+      }
+
+      checkbox.checked = Boolean(data?.auto_approve_users);
+      showMessage(message, "");
+    }
+
+    async function updateAutoApproveUsers(enabled) {
+      const checkbox = document.getElementById("autoApproveUsersCheckbox");
+      const message = document.getElementById("adminSettingsMessage");
+
+      if (currentProfile?.global_role !== "administrator") return;
+
+      checkbox.disabled = true;
+      showMessage(message, "Zapisywanie ustawienia...");
+
+      const { error } = await client
+        .from("app_settings")
+        .update({
+          auto_approve_users: enabled,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", 1);
+
+      checkbox.disabled = false;
+
+      if (error) {
+        checkbox.checked = !enabled;
+        showMessage(message, error.message, "error");
+        return;
+      }
+
+      showMessage(
+        message,
+        enabled
+          ? "Automatyczna akceptacja nowych kont została włączona."
+          : "Automatyczna akceptacja nowych kont została wyłączona.",
+        "success"
+      );
+    }
+
+    async function deleteUserAccount(userId, encodedName) {
+      if (currentProfile?.global_role !== "administrator") return;
+
+      if (userId === currentUser?.id) {
+        alert("Nie możesz usunąć własnego konta Administratora.");
+        return;
+      }
+
+      const userName = decodeURIComponent(encodedName || "") || "tego użytkownika";
+
+      const confirmed = confirm(
+        `Czy na pewno chcesz trwale usunąć konto: ${userName}?\n\n`
+        + "Użytkownik nie będzie mógł się zalogować. Jego przypisania do wyjazdów zostaną usunięte."
+      );
+
+      if (!confirmed) return;
+
+      const secondConfirmation = confirm(
+        "To działanie jest nieodwracalne. Czy potwierdzasz trwałe usunięcie konta?"
+      );
+
+      if (!secondConfirmation) return;
+
+      const { error } = await client.rpc("admin_delete_user", {
+        target_user_id: userId
+      });
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      alert("Konto zostało usunięte.");
+      await loadAdminPanel();
+    }
+
+    function setupAdminSettingsControls() {
+      const checkbox = document.getElementById("autoApproveUsersCheckbox");
+
+      checkbox?.addEventListener("change", event => {
+        updateAutoApproveUsers(event.target.checked);
+      });
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", setupAdminSettingsControls);
+    } else {
+      setupAdminSettingsControls();
+    }
+
+
     async function loadAdminPanel() {
+      await loadAdminSettings();
       const isAdmin = currentProfile?.global_role === "administrator" && currentProfile?.status === "active";
       document.getElementById("adminDenied").classList.toggle("hidden", isAdmin);
       document.getElementById("adminContent").classList.toggle("hidden", !isAdmin);
@@ -5301,7 +5581,14 @@
               <div class="actions">
                 ${profile.status !== "active" ? `<button class="button small-button" onclick="setUserStatus('${profile.id}', 'active')">Aktywuj</button>` : ""}
                 ${!isSelf && profile.status !== "blocked" ? `<button class="button secondary small-button" onclick="setUserStatus('${profile.id}', 'blocked')">Zablokuj</button>` : ""}
-                ${!isSelf ? `<button class="button secondary small-button" onclick="forcePasswordChange('${profile.id}')">Wymuś hasło</button>` : ""}
+                ${!isSelf ? `<button class="button secondary small-button" onclick="forcePasswordChange('${profile.id}')">Wymuś hasło</button>
+                <button
+                  class="button danger small-button"
+                  type="button"
+                  onclick="deleteUserAccount('${profile.id}', '${encodeURIComponent(userDisplayName(profile))}')"
+                >
+                  Usuń konto
+                </button>` : ""}
               </div>
             </td>
           </tr>
