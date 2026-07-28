@@ -2256,24 +2256,40 @@
     }
 
   
-    .place-address-link {
-      display: inline-flex;
+    .map-icon-link {
+      display: inline-grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      flex: 0 0 auto;
+      margin-left: 7px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      color: var(--accent);
+      background: rgba(255,255,255,.06);
+      text-decoration: none;
+      vertical-align: middle;
+      font-size: 17px;
+      line-height: 1;
+    }
+
+    .map-icon-link:hover {
+      border-color: var(--accent);
+      background: rgba(245,196,81,.12);
+    }
+
+    .address-with-map {
+      display: flex;
       align-items: flex-start;
       gap: 7px;
-      color: var(--accent);
-      font-weight: 800;
-      line-height: 1.45;
+      min-width: 0;
+    }
+
+    .address-with-map-text {
+      min-width: 0;
+      flex: 1 1 auto;
       overflow-wrap: anywhere;
-      text-decoration: none;
-    }
-
-    .place-address-link:hover {
-      text-decoration: underline;
-    }
-
-    .place-address-link::before {
-      content: "📍";
-      flex: 0 0 auto;
+      line-height: 1.45;
     }
 
   </style>
@@ -4438,7 +4454,19 @@
                       ${escapeHtml(location.description || "Brak opisu")}
                     </td>
                     <td class="location-address">
-                      ${escapeHtml(location.address || "Brak adresu")}
+                      ${location.address ? `
+                        <div class="address-with-map">
+                          <span class="address-with-map-text">${escapeHtml(location.address)}</span>
+                          <a
+                            class="map-icon-link"
+                            href="${escapeHtml(googleMapsAddressUrl(location.address))}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Otwórz w Google Maps"
+                            aria-label="Otwórz adres w Google Maps"
+                          >📍</a>
+                        </div>
+                      ` : '<span class="muted">Brak adresu</span>'}
                     </td>
                     <td>
                       ${website ? `
@@ -5117,15 +5145,17 @@
           </td>
           <td class="place-address">
             ${place.address ? `
-              <a
-                class="place-address-link"
-                href="${escapeHtml(googleMapsAddressUrl(place.address))}"
-                target="_blank"
-                rel="noopener noreferrer"
-                title="Otwórz adres w Google Maps"
-              >
-                ${escapeHtml(place.address)}
-              </a>
+              <div class="address-with-map">
+                <span class="address-with-map-text">${escapeHtml(place.address)}</span>
+                <a
+                  class="map-icon-link"
+                  href="${escapeHtml(googleMapsAddressUrl(place.address))}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Otwórz w Google Maps"
+                  aria-label="Otwórz adres w Google Maps"
+                >📍</a>
+              </div>
             ` : '<span class="muted">Brak adresu</span>'}
           </td>
           <td><span class="place-type">${escapeHtml(placeTypeLabel(place.place_type))}</span></td>
