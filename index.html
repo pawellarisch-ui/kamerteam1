@@ -1822,6 +1822,74 @@
       }
     }
 
+  
+    .current-trip-public {
+      display: none;
+      margin: 18px 0 0;
+      padding: 18px;
+      border: 1px solid rgba(245,196,81,.45);
+      border-radius: 18px;
+      background: rgba(245,196,81,.09);
+    }
+
+    .current-trip-public.visible {
+      display: block;
+    }
+
+    .current-trip-public-label {
+      margin-bottom: 8px;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .current-trip-public-title {
+      margin: 0 0 7px;
+      font-size: 25px;
+      font-weight: 900;
+    }
+
+    .current-trip-public-dates {
+      color: var(--accent);
+      font-weight: 800;
+    }
+
+    .current-trip-public-description {
+      margin: 10px 0 0;
+      color: var(--muted);
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+
+    .current-trip-control {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .current-trip-control input {
+      width: 20px;
+      height: 20px;
+      margin: 0;
+      accent-color: var(--accent);
+    }
+
+    .current-trip-badge {
+      display: inline-flex;
+      padding: 5px 9px;
+      border-radius: 999px;
+      color: #17242a;
+      background: var(--accent);
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
   </style>
 </head>
 
@@ -1861,7 +1929,15 @@
           </div>
 
           <div class="card" id="authCard">
-            <div id="authView">
+            
+        <div id="currentTripPublic" class="current-trip-public">
+          <div class="current-trip-public-label">Aktualny wyjazd</div>
+          <div id="currentTripPublicTitle" class="current-trip-public-title"></div>
+          <div id="currentTripPublicDates" class="current-trip-public-dates"></div>
+          <p id="currentTripPublicDescription" class="current-trip-public-description"></p>
+        </div>
+
+<div id="authView">
               <h2 id="formTitle">Logowanie</h2>
               <p class="subtitle" id="formSubtitle">Wpisz adres e-mail i hasło.</p>
 
@@ -2780,7 +2856,7 @@
 
       const { data: tripsData, error: tripsError } = await client
         .from("trips")
-        .select("id, title, description, start_date, end_date, created_at")
+        .select("id, title, description, start_date, end_date, created_at, is_current")
         .order("start_date", { ascending: true, nullsFirst: false });
 
       if (tripsError) {
@@ -5490,6 +5566,63 @@
 
 
 
+
+    async function loadPublicCurrentTrip() {
+      const box = document.getElementById("currentTripPublic");
+      const title = document.getElementById("currentTripPublicTitle");
+      const dates = document.getElementById("currentTripPublicDates");
+      const description = document.getElementById("currentTripPublicDescription");
+
+      if (!box || !title || !dates || !description) return;
+
+      const { data, error } = await client
+        .from("trips")
+        .select("id, title, description, start_date, end_date, is_current")
+        .eq("is_current", true)
+        .maybeSingle();
+
+      if (error || !data) {
+        box.classList.remove("visible");
+        return;
+      }
+
+      title.textContent = data.title || "Aktualny wyjazd";
+      dates.textContent = `${formatDate(data.start_date)} – ${formatDate(data.end_date)}`;
+      description.textContent = data.description || "Brak dodatkowego opisu.";
+      box.classList.add("visible");
+    }
+
+    async function setCurrentTrip(tripId, enabled) {
+      if (currentProfile?.global_role !== "administrator") return;
+
+      const { error } = await client.rpc("set_current_trip", {
+        selected_trip_id: enabled ? tripId : null
+      });
+
+      if (error) {
+        alert(error.message);
+        await loadAdminPanel();
+        return;
+      }
+
+      await Promise.all([
+        loadAdminPanel(),
+        loadTrips(),
+        loadPublicCurrentTrip()
+      ]);
+    }
+
+    function setupCurrentTripPublicView() {
+      loadPublicCurrentTrip();
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", setupCurrentTripPublicView);
+    } else {
+      setupCurrentTripPublicView();
+    }
+
+
     function setupContactForm() {
       const form = document.getElementById("contactForm");
       if (!form) return;
@@ -5697,6 +5830,7 @@
                 <th>Opis</th>
                 <th>Uczestnicy</th>
                 <th>Goście</th>
+                <th>Aktualny</th>
                 <th>Operacje</th>
               </tr>
             </thead>
@@ -5718,6 +5852,16 @@
                     <td><div class="actions">${participants}</div></td>
                     <td><div class="actions">${guests}</div></td>
                     <td>
+                    <label class="current-trip-control">
+                      <input
+                        type="checkbox"
+                        ${trip.is_current ? "checked" : ""}
+                        onchange="setCurrentTrip('${trip.id}', this.checked)"
+                      >
+                      ${trip.is_current ? '<span class="current-trip-badge">Aktualny</span>' : "Ustaw"}
+                    </label>
+                  </td>
+                  <td>
                       <div class="actions">
                         <button class="button secondary small-button" onclick="editTrip('${trip.id}')">Edytuj</button>
                         <button class="button danger small-button" onclick="deleteTrip('${trip.id}')">Usuń</button>
