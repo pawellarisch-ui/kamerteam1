@@ -787,16 +787,28 @@
 
     .photo-lightbox-close {
       position: absolute;
-      top: -8px;
-      right: -8px;
-      width: 44px;
-      height: 44px;
-      border: 1px solid rgba(255,255,255,.28);
+      top: 8px;
+      right: 8px;
+      z-index: 2;
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      border: 1px solid rgba(255,255,255,.38);
       border-radius: 50%;
       color: #fff;
-      background: rgba(0,0,0,.7);
-      font-size: 24px;
+      background: rgba(0,0,0,.78);
+      font-size: 26px;
+      line-height: 1;
       cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    #photoLightboxDownload {
+      width: auto;
+      min-width: 180px;
+      margin: 0;
     }
 
     @media (max-width: 620px) {
@@ -2223,10 +2235,20 @@
       const lightbox = document.getElementById("photoLightbox");
       const image = document.getElementById("photoLightboxImage");
       const caption = document.getElementById("photoLightboxCaption");
+      const downloadButton = document.getElementById("photoLightboxDownload");
+      const signedUrl = decodeURIComponent(encodedUrl);
 
-      image.src = decodeURIComponent(encodedUrl);
+      if (!lightbox || !image || !caption || !downloadButton) return;
+
+      image.src = signedUrl;
       image.alt = photo?.caption || photo?.file_name || "Zdjęcie z wyjazdu";
       caption.textContent = photo?.caption || photo?.file_name || "";
+
+      downloadButton.onclick = () => downloadPhoto(
+        signedUrl,
+        photo?.file_name || `kamperteam-${photoId}.jpg`
+      );
+
       lightbox.classList.add("open");
       lightbox.setAttribute("aria-hidden", "false");
       document.body.style.overflow = "hidden";
@@ -2236,27 +2258,85 @@
       const lightbox = document.getElementById("photoLightbox");
       const image = document.getElementById("photoLightboxImage");
 
+      if (!lightbox || !image) return;
+
       lightbox.classList.remove("open");
       lightbox.setAttribute("aria-hidden", "true");
       image.src = "";
       document.body.style.overflow = "";
     }
 
-    document.getElementById("photoLibraryInput").addEventListener("change", event => {
-      uploadSelectedPhotos(event.target.files);
-    });
+    async function downloadPhoto(url, fileName) {
+      const button = document.getElementById("photoLightboxDownload");
+      const originalText = button?.textContent || "Pobierz zdjęcie";
 
-    document.getElementById("photoCameraInput").addEventListener("change", event => {
-      uploadSelectedPhotos(event.target.files);
-    });
+      try {
+        if (button) {
+          button.disabled = true;
+          button.textContent = "Pobieranie...";
+        }
 
-    document.getElementById("photoLightboxClose").addEventListener("click", closePhotoLightbox);
+        const response = await fetch(url);
 
-    document.getElementById("photoLightbox").addEventListener("click", event => {
-      if (event.target.id === "photoLightbox") {
-        closePhotoLightbox();
+        if (!response.ok) {
+          throw new Error("Nie udało się pobrać zdjęcia.");
+        }
+
+        const blob = await response.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+
+        link.href = objectUrl;
+        link.download = fileName || "zdjecie-kamperteam.jpg";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
+      } catch (error) {
+        console.error(error);
+
+        // Na iPhonie Safari może zamiast pobierania otworzyć obraz w nowej karcie.
+        window.open(url, "_blank", "noopener,noreferrer");
+      } finally {
+        if (button) {
+          button.disabled = false;
+          button.textContent = originalText;
+        }
       }
-    });
+    }
+
+    function setupPhotoControls() {
+      const libraryInput = document.getElementById("photoLibraryInput");
+      const cameraInput = document.getElementById("photoCameraInput");
+      const lightbox = document.getElementById("photoLightbox");
+
+      libraryInput?.addEventListener("change", event => {
+        uploadSelectedPhotos(event.target.files);
+      });
+
+      cameraInput?.addEventListener("change", event => {
+        uploadSelectedPhotos(event.target.files);
+      });
+
+      lightbox?.addEventListener("click", event => {
+        if (event.target === lightbox) {
+          closePhotoLightbox();
+        }
+      });
+
+      document.addEventListener("keydown", event => {
+        if (event.key === "Escape") {
+          closePhotoLightbox();
+        }
+      });
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", setupPhotoControls);
+    } else {
+      setupPhotoControls();
+    }
 
 
     async function loadAdminPanel() {
@@ -2601,9 +2681,25 @@
 
   <div id="photoLightbox" class="photo-lightbox" aria-hidden="true">
     <div class="photo-lightbox-content">
-      <button id="photoLightboxClose" class="photo-lightbox-close" type="button" aria-label="Zamknij">×</button>
+      <button
+        id="photoLightboxClose"
+        class="photo-lightbox-close"
+        type="button"
+        aria-label="Zamknij podgląd"
+        onclick="closePhotoLightbox()"
+      >×</button>
+
       <img id="photoLightboxImage" class="photo-lightbox-image" alt="">
+
       <div id="photoLightboxCaption" class="photo-lightbox-caption"></div>
+
+      <button
+        id="photoLightboxDownload"
+        class="button"
+        type="button"
+      >
+        Pobierz zdjęcie
+      </button>
     </div>
   </div>
 
