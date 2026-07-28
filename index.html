@@ -1890,26 +1890,298 @@
       white-space: nowrap;
     }
 
+  
+    .wrap {
+      width: min(1500px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .app-topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      min-height: 72px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+      background: rgba(7, 29, 36, .92);
+      backdrop-filter: blur(16px);
+    }
+
+    .topbar-account {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .topbar-account .nav-button {
+      padding: 10px 14px;
+    }
+
+    .app-layout {
+      display: grid;
+      grid-template-columns: 290px minmax(0, 1fr);
+      gap: 26px;
+      align-items: start;
+      padding: 24px 0 50px;
+    }
+
+    .app-sidebar {
+      position: sticky;
+      top: 96px;
+      display: grid;
+      gap: 18px;
+      max-height: calc(100vh - 116px);
+      overflow-y: auto;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: rgba(8, 32, 39, .84);
+      backdrop-filter: blur(14px);
+    }
+
+    .sidebar-current-trip {
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .sidebar-trip-label {
+      margin-bottom: 6px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .sidebar-trip-title {
+      margin: 0 0 6px;
+      font-size: 25px;
+      line-height: 1.1;
+      font-weight: 900;
+    }
+
+    .sidebar-trip-dates {
+      color: var(--accent);
+      font-weight: 800;
+    }
+
+    .sidebar-trip-description {
+      margin: 9px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+
+    .sidebar-no-trip {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .sidebar-nav {
+      display: grid;
+      gap: 8px;
+    }
+
+    .sidebar-nav .nav-button {
+      width: 100%;
+      justify-content: flex-start;
+      padding: 13px 14px;
+      text-align: left;
+      border: 1px solid transparent;
+      border-radius: 12px;
+      color: var(--text);
+      background: transparent;
+    }
+
+    .sidebar-nav .nav-button:hover {
+      border-color: var(--line);
+      background: rgba(255,255,255,.05);
+    }
+
+    .sidebar-nav .nav-button.active {
+      color: #17242a;
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .app-content {
+      min-width: 0;
+    }
+
+    .page {
+      min-height: calc(100vh - 130px);
+    }
+
+    #page-home .hero {
+      display: block;
+      padding: 0;
+    }
+
+    #page-home .hero > div:first-child {
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: rgba(8, 32, 39, .68);
+    }
+
+    #page-home h1 {
+      font-size: clamp(42px, 6vw, 72px);
+    }
+
+    #authCard {
+      width: min(520px, 100%);
+      margin-top: 18px;
+      padding: 18px;
+      border-radius: 18px;
+    }
+
+    #authCard h2 {
+      font-size: 23px;
+    }
+
+    #authCard .tabs {
+      margin-bottom: 12px;
+    }
+
+    #authCard label {
+      margin-top: 10px;
+    }
+
+    #authCard input {
+      padding: 11px 12px;
+    }
+
+    #authCard .button {
+      padding: 11px 14px;
+    }
+
+    body.is-active-session #authCard {
+      display: none;
+    }
+
+    body.is-active-session #page-home .hero > div:first-child {
+      min-height: 260px;
+      display: grid;
+      align-content: center;
+    }
+
+    .current-trip-public {
+      display: block;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: transparent;
+    }
+
+    .current-trip-public:not(.visible) {
+      display: none;
+    }
+
+    .current-trip-public-title {
+      font-size: 25px;
+    }
+
+    @media (max-width: 920px) {
+      .app-layout {
+        grid-template-columns: 230px minmax(0, 1fr);
+        gap: 16px;
+      }
+
+      .app-sidebar {
+        padding: 14px;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .wrap {
+        width: min(100% - 20px, 1500px);
+      }
+
+      .app-topbar {
+        min-height: 64px;
+      }
+
+      .brand {
+        font-size: 17px;
+      }
+
+      .logo {
+        width: 36px;
+        height: 36px;
+      }
+
+      .app-layout {
+        display: block;
+        padding-top: 14px;
+      }
+
+      .app-sidebar {
+        position: static;
+        max-height: none;
+        margin-bottom: 14px;
+      }
+
+      .sidebar-nav {
+        display: flex;
+        overflow-x: auto;
+        padding-bottom: 4px;
+      }
+
+      .sidebar-nav .nav-button {
+        width: auto;
+        flex: 0 0 auto;
+        white-space: nowrap;
+      }
+
+      .sidebar-current-trip {
+        padding-bottom: 12px;
+      }
+
+      .topbar-account {
+        gap: 6px;
+      }
+
+      .topbar-account .badge {
+        display: none;
+      }
+
+      .topbar-account .nav-button {
+        padding: 9px 11px;
+      }
+
+      .page {
+        min-height: auto;
+      }
+
+      #page-home .hero > div:first-child {
+        padding: 22px 18px;
+      }
+    }
+
   </style>
 </head>
 
 <body>
   <div class="wrap">
-    <nav>
+    <header class="app-topbar">
       <div class="brand">
         <div class="logo">🚐</div>
         KamperTeam.eu
       </div>
 
-      <div class="nav-links">
-        <button class="nav-button active" data-page="home">O stronie</button>
-        <button class="nav-button" data-page="trips">Wypady</button>
-        <button class="nav-button" data-page="contact">Kontakt</button>
-        <button class="nav-button admin-link hidden" id="adminNav" data-page="admin">Panel administratora</button>
-        <button class="nav-button hidden" id="logoutNav">Wyloguj</button>
+      <div class="topbar-account">
         <span id="navStatus" class="badge">Gość</span>
+        <button class="nav-button hidden" id="logoutNav">Wyloguj</button>
       </div>
-    </nav>
+    </header>
 
     <div id="iosInstallNote" class="ios-install-note">
       <strong>Zainstaluj KamperTeam na iPhonie:</strong>
@@ -1917,7 +2189,34 @@
       a następnie włącz „Otwórz jako aplikację”.
     </div>
 
-    <main>
+
+    <div class="app-layout">
+      <aside class="app-sidebar">
+        <div class="sidebar-current-trip">
+          <div id="currentTripPublic" class="current-trip-public">
+            <div class="sidebar-trip-label">Aktualny wyjazd</div>
+            <div id="currentTripPublicTitle" class="sidebar-trip-title"></div>
+            <div id="currentTripPublicDates" class="sidebar-trip-dates"></div>
+            <p id="currentTripPublicDescription" class="sidebar-trip-description"></p>
+          </div>
+
+          <div id="currentTripPublicEmpty" class="sidebar-no-trip">
+            Nie wybrano aktualnego wyjazdu.
+          </div>
+        </div>
+
+        <div class="sidebar-nav">
+          <button class="nav-button active" data-page="home">O stronie</button>
+          <button class="nav-button" data-page="trips">Wypady</button>
+          <button class="nav-button" data-page="contact">Kontakt</button>
+          <button class="nav-button" data-page="install">Aplikacja na iPhone</button>
+          <button class="nav-button admin-link hidden" id="adminNav" data-page="admin">
+            Panel administratora
+          </button>
+        </div>
+      </aside>
+
+      <main class="app-content">
       <section id="page-home" class="page active">
         <div class="hero">
           <div>
@@ -1930,12 +2229,7 @@
 
           <div class="card" id="authCard">
             
-        <div id="currentTripPublic" class="current-trip-public">
-          <div class="current-trip-public-label">Aktualny wyjazd</div>
-          <div id="currentTripPublicTitle" class="current-trip-public-title"></div>
-          <div id="currentTripPublicDates" class="current-trip-public-dates"></div>
-          <p id="currentTripPublicDescription" class="current-trip-public-description"></p>
-        </div>
+        
 
 <div id="authView">
               <h2 id="formTitle">Logowanie</h2>
@@ -2550,7 +2844,9 @@
         </div>
       </section>
 
-    </main>
+
+      </main>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -2675,6 +2971,7 @@
     async function renderSession(user) {
       currentUser = user;
       currentProfile = null;
+      document.body.classList.remove("is-active-session");
       adminNav.classList.add("hidden");
       logoutNav.classList.toggle("hidden", !user);
 
@@ -2739,6 +3036,7 @@
         return;
       }
 
+      document.body.classList.add("is-active-session");
       accountTitle.textContent = `Witaj, ${userDisplayName(currentProfile)}`;
       accountText.textContent = isAdmin
         ? "Masz pełny dostęp administracyjny do portalu."
@@ -5581,10 +5879,15 @@
         .eq("is_current", true)
         .maybeSingle();
 
+      const emptyBox = document.getElementById("currentTripPublicEmpty");
+
       if (error || !data) {
         box.classList.remove("visible");
+        emptyBox?.classList.remove("hidden");
         return;
       }
+
+      emptyBox?.classList.add("hidden");
 
       title.textContent = data.title || "Aktualny wyjazd";
       dates.textContent = `${formatDate(data.start_date)} – ${formatDate(data.end_date)}`;
