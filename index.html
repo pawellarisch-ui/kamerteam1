@@ -2166,6 +2166,95 @@
       }
     }
 
+  
+    .dashboard-summary {
+      display: grid;
+      gap: 18px;
+    }
+
+    .dashboard-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .dashboard-metric {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255,255,255,.04);
+    }
+
+    .dashboard-metric-label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.4;
+    }
+
+    .dashboard-metric-value {
+      margin-top: 7px;
+      color: var(--accent);
+      font-size: 30px;
+      font-weight: 900;
+    }
+
+    .dashboard-metric-subtext {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .dashboard-km-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: end;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255,255,255,.04);
+    }
+
+    .dashboard-km-card input {
+      max-width: 220px;
+    }
+
+    .dashboard-km-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .dashboard-loading {
+      min-height: 220px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    @media (max-width: 900px) {
+      .dashboard-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 620px) {
+      .dashboard-metrics {
+        grid-template-columns: 1fr;
+      }
+
+      .dashboard-km-card {
+        grid-template-columns: 1fr;
+      }
+
+      .dashboard-km-card input {
+        max-width: none;
+      }
+    }
+
   </style>
 </head>
 
@@ -2317,10 +2406,18 @@
         </div>
 
         <div id="trip-tab-pulpit" class="trip-tab-content active">
-          <div class="card placeholder-panel">
+          <div class="dashboard-summary">
             <div>
-              <h2>Pulpit wyjazdu</h2>
-              <p class="muted">Tutaj pojawi się podsumowanie najważniejszych informacji o wyjeździe.</p>
+              <h2>Podsumowanie wyjazdu</h2>
+              <p class="muted">
+                Najważniejsze informacje zbierane automatycznie z pozostałych zakładek.
+              </p>
+            </div>
+
+            <div id="dashboardMessage" class="message"></div>
+
+            <div id="dashboardContent" class="dashboard-loading">
+              Ładowanie podsumowania...
             </div>
           </div>
         </div>
@@ -3155,7 +3252,7 @@
 
       const { data: tripsData, error: tripsError } = await client
         .from("trips")
-        .select("id, title, description, start_date, end_date, created_at, is_current")
+        .select("id, title, description, start_date, end_date, created_at, is_current, estimated_km")
         .order("start_date", { ascending: true, nullsFirst: false });
 
       if (tripsError) {
@@ -3296,6 +3393,10 @@
 
       if (tabName === "mapa" && selectedTrip) {
         await loadRouteMap();
+      }
+
+      if (tabName === "pulpit" && selectedTrip) {
+        await loadDashboardSummary();
       }
     }
 
@@ -3765,6 +3866,226 @@
 
 
 
+
+
+
+    async function loadDashboardSummary() {
+      const message = document.getElementById("dashboardMessage");
+      const content = document.getElementById("dashboardContent");
+
+      if (!selectedTrip) return;
+
+      showMessage(message, "Ładowanie podsumowania...");
+      content.className = "dashboard-loading";
+      content.textContent = "Ładowanie podsumowania...";
+
+      const [
+        { data: daysData, error: daysError },
+        { data: tasksData, error: tasksError },
+        { data: photosData, error: photosError },
+        { data: locationsData, error: locationsError },
+        { data: placesData, error: placesError }
+      ] = await Promise.all([
+        client
+          .from("schedule_days")
+          .select("id, day_date")
+          .eq("trip_id", selectedTrip.id)
+          .eq("is_active", true),
+        client
+          .from("trip_tasks")
+          .select("id, status")
+          .eq("trip_id", selectedTrip.id),
+        client
+          .from("trip_photos")
+          .select("id")
+          .eq("trip_id", selectedTrip.id),
+        client
+          .from("trip_locations")
+          .select("id")
+          .eq("trip_id", selectedTrip.id),
+        client
+          .from("trip_places")
+          .select("id")
+          .eq("trip_id", selectedTrip.id)
+      ]);
+
+      const firstError = daysError || tasksError || photosError || locationsError || placesError;
+
+      if (firstError) {
+        showMessage(message, firstError.message, "error");
+        content.textContent = "Nie udało się pobrać podsumowania.";
+        return;
+      }
+
+      const dayIds = (daysData || []).map(day => day.id);
+
+      let scheduleItemsData = [];
+      let schedulePlacesData = [];
+
+      if (dayIds.length) {
+        const [
+          { data: itemsData, error: itemsError },
+          { data: linksData, error: linksError }
+        ] = await Promise.all([
+          client
+            .from("schedule_items")
+            .select("id, location_id")
+            .in("schedule_day_id", dayIds)
+            .not("location_id", "is", null),
+          client
+            .from("schedule_day_places")
+            .select("id, place_id")
+            .in("schedule_day_id", dayIds)
+        ]);
+
+        if (itemsError || linksError) {
+          const error = itemsError || linksError;
+          showMessage(message, error.message, "error");
+          content.textContent = "Nie udało się pobrać podsumowania.";
+          return;
+        }
+
+        scheduleItemsData = itemsData || [];
+        schedulePlacesData = linksData || [];
+      }
+
+      const plannedLocationIds = new Set(
+        scheduleItemsData
+          .map(item => item.location_id)
+          .filter(Boolean)
+      );
+
+      const plannedPlaceIds = new Set(
+        schedulePlacesData
+          .map(link => link.place_id)
+          .filter(Boolean)
+      );
+
+      const tasks = tasksData || [];
+      const completedTasks = tasks.filter(task => task.status === "wykonane").length;
+      const openTasks = tasks.filter(task => task.status !== "wykonane").length;
+      const photosCount = (photosData || []).length;
+
+      const kilometers = Number(selectedTrip.estimated_km || 0);
+
+      renderDashboardSummary({
+        kilometers,
+        plannedLocations: plannedLocationIds.size,
+        plannedPlaces: plannedPlaceIds.size,
+        completedTasks,
+        openTasks,
+        photosCount
+      });
+
+      showMessage(message, "");
+    }
+
+    function renderDashboardSummary(summary) {
+      const content = document.getElementById("dashboardContent");
+      const canEditKilometers = currentProfile?.global_role === "administrator";
+
+      content.className = "dashboard-summary";
+
+      content.innerHTML = `
+        <div class="dashboard-km-card">
+          <div>
+            <div class="dashboard-metric-label">Kilometry do przejechania</div>
+            <div class="dashboard-metric-value">
+              ${summary.kilometers ? `${summary.kilometers} km` : "Brak danych"}
+            </div>
+            <div class="dashboard-metric-subtext">
+              Na razie wartość wpisywana ręcznie przez Administratora.
+            </div>
+          </div>
+
+          ${canEditKilometers ? `
+            <div class="dashboard-km-actions">
+              <input
+                id="dashboardKilometersInput"
+                type="number"
+                min="0"
+                step="1"
+                value="${summary.kilometers || ""}"
+                placeholder="np. 2200"
+              >
+              <button class="button" type="button" onclick="saveDashboardKilometers()">
+                Zapisz km
+              </button>
+            </div>
+          ` : ""}
+        </div>
+
+        <div class="dashboard-metrics">
+          <div class="dashboard-metric">
+            <div class="dashboard-metric-label">Zaplanowane miejsca do zobaczenia</div>
+            <div class="dashboard-metric-value">${summary.plannedLocations}</div>
+            <div class="dashboard-metric-subtext">
+              Miejsca przypisane do punktów godzinowych Harmonogramu.
+            </div>
+          </div>
+
+          <div class="dashboard-metric">
+            <div class="dashboard-metric-label">Zaplanowane kempingi i postoje</div>
+            <div class="dashboard-metric-value">${summary.plannedPlaces}</div>
+            <div class="dashboard-metric-subtext">
+              Kempingi i postoje przypisane do dni Harmonogramu.
+            </div>
+          </div>
+
+          <div class="dashboard-metric">
+            <div class="dashboard-metric-label">Zadania wykonane</div>
+            <div class="dashboard-metric-value">${summary.completedTasks}</div>
+            <div class="dashboard-metric-subtext">
+              Zadania ze statusem „Wykonane”.
+            </div>
+          </div>
+
+          <div class="dashboard-metric">
+            <div class="dashboard-metric-label">Zadania do wykonania</div>
+            <div class="dashboard-metric-value">${summary.openTasks}</div>
+            <div class="dashboard-metric-subtext">
+              Zadania „Do zrobienia” i „W trakcie”.
+            </div>
+          </div>
+
+          <div class="dashboard-metric">
+            <div class="dashboard-metric-label">Dodane zdjęcia</div>
+            <div class="dashboard-metric-value">${summary.photosCount}</div>
+            <div class="dashboard-metric-subtext">
+              Wszystkie zdjęcia zapisane w galerii tego wyjazdu.
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    async function saveDashboardKilometers() {
+      if (currentProfile?.global_role !== "administrator" || !selectedTrip) return;
+
+      const input = document.getElementById("dashboardKilometersInput");
+      const value = Number(input?.value || 0);
+
+      if (!Number.isFinite(value) || value < 0) {
+        alert("Podaj prawidłową liczbę kilometrów.");
+        return;
+      }
+
+      const { error } = await client
+        .from("trips")
+        .update({
+          estimated_km: Math.round(value),
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", selectedTrip.id);
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      selectedTrip.estimated_km = Math.round(value);
+      await loadDashboardSummary();
+    }
 
 
     async function loadRouteMap() {
@@ -5875,7 +6196,7 @@
 
       const { data, error } = await client
         .from("trips")
-        .select("id, title, description, start_date, end_date, created_at, is_current")
+        .select("id, title, description, start_date, end_date, created_at, is_current, estimated_km")
         .eq("is_current", true)
         .maybeSingle();
 
