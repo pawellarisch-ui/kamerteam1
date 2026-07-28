@@ -2735,6 +2735,64 @@
       }
     }
 
+  
+    .schedule-day-locations {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .schedule-day-locations h3 {
+      margin: 0 0 12px;
+      font-size: 17px;
+    }
+
+    .schedule-location-form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .schedule-location-form label {
+      margin: 0;
+    }
+
+    .schedule-assigned-locations {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .schedule-assigned-location {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      padding: 11px 12px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: rgba(255,255,255,.025);
+    }
+
+    .schedule-assigned-location-name {
+      font-weight: 900;
+    }
+
+    .schedule-assigned-location-address {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+
+    @media (max-width: 650px) {
+      .schedule-location-form,
+      .schedule-assigned-location {
+        grid-template-columns: 1fr;
+      }
+    }
+
   </style>
 </head>
 
@@ -4138,6 +4196,7 @@
 
             <div class="schedule-day-body">
               ${renderCompactOvernightPicker(day, overnightPlace)}
+              ${renderDayLocationAssignments(day)}
             </div>
           </details>
         `;
@@ -4189,6 +4248,156 @@
           </p>
         ` : ""}
       `;
+    }
+
+    function renderDayLocationAssignments(day) {
+      const assignedItems = scheduleItems.filter(
+        item => item.schedule_day_id === day.id && item.location_id
+      );
+
+      const assignedLocationIds = new Set(
+        assignedItems.map(item => item.location_id)
+      );
+
+      const availableLocations = tripLocations.filter(
+        location => !assignedLocationIds.has(location.id)
+      );
+
+      return `
+        <div class="schedule-day-locations">
+          <h3>Miejsca na ten dzień</h3>
+
+          <div class="schedule-assigned-locations">
+            ${assignedItems.length
+              ? assignedItems.map(item => {
+                  const location = tripLocations.find(
+                    entry => entry.id === item.location_id
+                  );
+
+                  if (!location) return "";
+
+                  return `
+                    <div class="schedule-assigned-location">
+                      <div>
+                        <div class="schedule-assigned-location-name">
+                          ${escapeHtml(location.name)}
+                        </div>
+                        ${location.address ? `
+                          <div class="schedule-assigned-location-address">
+                            ${escapeHtml(location.address)}
+                          </div>
+                        ` : ""}
+                      </div>
+
+                      ${canModifyScheduleItem(item) ? `
+                        <button
+                          class="button danger small-button"
+                          type="button"
+                          onclick="removeLocationFromScheduleDay('${item.id}')"
+                        >
+                          Usuń
+                        </button>
+                      ` : ""}
+                    </div>
+                  `;
+                }).join("")
+              : '<div class="muted">Nie przypisano jeszcze żadnego miejsca do tego dnia.</div>'
+            }
+          </div>
+
+          ${canAddScheduleItem() ? `
+            <form
+              class="schedule-location-form"
+              onsubmit="addLocationToScheduleDay(event, '${day.id}')"
+            >
+              <label>
+                Dodaj z zakładki „Miejsca”
+                <select name="location_id" ${availableLocations.length ? "required" : "disabled"}>
+                  <option value="">Wybierz miejsce</option>
+                  ${availableLocations.map(location => `
+                    <option value="${location.id}">
+                      ${escapeHtml(location.name)}
+                      ${location.address ? ` — ${escapeHtml(location.address)}` : ""}
+                    </option>
+                  `).join("")}
+                </select>
+              </label>
+
+              <button
+                class="button"
+                type="submit"
+                ${availableLocations.length ? "" : "disabled"}
+              >
+                Dodaj
+              </button>
+            </form>
+
+            ${!tripLocations.length ? `
+              <p class="muted">
+                Najpierw dodaj miejsce w zakładce „Miejsca”.
+              </p>
+            ` : ""}
+          ` : ""}
+        </div>
+      `;
+    }
+
+    async function addLocationToScheduleDay(event, scheduleDayId) {
+      event.preventDefault();
+
+      if (!canAddScheduleItem()) {
+        alert("Nie masz uprawnień do przypisywania miejsc.");
+        return;
+      }
+
+      const form = event.currentTarget;
+      const button = form.querySelector('button[type="submit"]');
+      const locationId = new FormData(form).get("location_id");
+      const location = tripLocations.find(item => item.id === locationId);
+
+      if (!locationId || !location) return;
+
+      button.disabled = true;
+
+      const { error } = await client
+        .from("schedule_items")
+        .insert({
+          schedule_day_id: scheduleDayId,
+          item_time: null,
+          title: location.name,
+          location_id: location.id,
+          location: null,
+          description: null,
+          created_by: currentUser.id
+        });
+
+      button.disabled = false;
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      await loadSchedule();
+    }
+
+    async function removeLocationFromScheduleDay(itemId) {
+      const item = scheduleItems.find(entry => entry.id === itemId);
+
+      if (!item || !canModifyScheduleItem(item)) return;
+      if (!confirm("Usunąć to miejsce z wybranego dnia?")) return;
+
+      const { error } = await client
+        .from("schedule_items")
+        .delete()
+        .eq("id", itemId);
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      await loadSchedule();
     }
 
     async function saveCompactOvernight(event, scheduleDayId) {
