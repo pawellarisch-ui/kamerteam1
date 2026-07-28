@@ -1,4 +1,4 @@
-const CACHE_NAME = "kamperteam-shell-v10";
+const CACHE_NAME = "kamperteam-shell-v11";
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -6,7 +6,8 @@ const APP_SHELL = [
   "/manifest.webmanifest",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
-  "/icons/apple-touch-icon.png"
+  "/icons/apple-touch-icon.png",
+  "/assets/kamperteam-hero.jpg"
 ];
 
 self.addEventListener("install", event => {

@@ -1645,6 +1645,87 @@
       }
     }
 
+  
+    .home-hero {
+      position: relative;
+      min-height: clamp(520px, 72vh, 760px);
+      display: grid;
+      align-items: end;
+      overflow: hidden;
+      margin: 8px 0 34px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background:
+        linear-gradient(
+          180deg,
+          rgba(3, 15, 19, .10) 0%,
+          rgba(3, 15, 19, .24) 38%,
+          rgba(3, 15, 19, .92) 100%
+        ),
+        url("/assets/kamperteam-hero.jpg") center 47% / cover no-repeat;
+      box-shadow: 0 28px 80px rgba(0,0,0,.30);
+    }
+
+    .home-hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 760px;
+      padding: clamp(26px, 5vw, 58px);
+    }
+
+    .home-hero-kicker {
+      display: inline-flex;
+      margin-bottom: 14px;
+      padding: 7px 11px;
+      border: 1px solid rgba(255,255,255,.24);
+      border-radius: 999px;
+      color: #fff;
+      background: rgba(5,22,28,.46);
+      backdrop-filter: blur(8px);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .home-hero h1 {
+      max-width: 680px;
+      margin: 0 0 16px;
+      color: #fff;
+      text-shadow: 0 3px 22px rgba(0,0,0,.55);
+    }
+
+    .home-hero .lead {
+      max-width: 680px;
+      margin: 0;
+      color: rgba(255,255,255,.88);
+      text-shadow: 0 2px 15px rgba(0,0,0,.55);
+    }
+
+    .home-hero-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 22px;
+    }
+
+    @media (max-width: 700px) {
+      .home-hero {
+        min-height: 610px;
+        margin-left: -8px;
+        margin-right: -8px;
+        border-radius: 22px;
+        background-position: 58% center;
+      }
+
+      .home-hero-content {
+        padding: 24px 20px 28px;
+      }
+
+      .home-hero h1 {
+        font-size: clamp(42px, 14vw, 64px);
+        line-height: .98;
+      }
+    }
+
   </style>
 </head>
 
@@ -1674,69 +1755,26 @@
 
     <main>
       <section id="page-home" class="page active">
-        <div class="hero">
-          <div>
+        <div class="home-hero">
+          <div class="home-hero-content">
+            <div class="home-hero-kicker">Wspólne podróże kamperami</div>
             <h1>Witaj w <span>KamperTeam</span></h1>
             <p class="lead">
-              Prywatne miejsce do organizowania wspólnych wyjazdów kamperowych,
-              planowania tras i dzielenia się informacjami z uczestnikami.
+              Planuj wyjazdy, harmonogram, noclegi, miejsca, zadania, zdjęcia
+              i rozmowy całej ekipy w jednym miejscu.
             </p>
-          </div>
 
-          <div class="card" id="authCard">
-            <div id="authView">
-              <h2 id="formTitle">Logowanie</h2>
-              <p class="subtitle" id="formSubtitle">Wpisz adres e-mail i hasło.</p>
-
-              <div class="tabs">
-                <button class="tab active" id="loginTab" type="button">Logowanie</button>
-                <button class="tab" id="registerTab" type="button">Rejestracja</button>
-              </div>
-
-              <form id="authForm">
-                <div id="nameFields" class="hidden">
-                  <label for="firstName">Imię</label>
-                  <input id="firstName" type="text" autocomplete="given-name" placeholder="Imię">
-
-                  <label for="lastName">Nazwisko</label>
-                  <input id="lastName" type="text" autocomplete="family-name" placeholder="Nazwisko">
-                </div>
-
-                <label for="email">Adres e-mail</label>
-                <input id="email" type="email" autocomplete="email" required placeholder="twoj@email.pl">
-
-                <label for="password">Hasło</label>
-                <input id="password" type="password" autocomplete="current-password" minlength="6" required placeholder="Minimum 6 znaków">
-
-                <button class="button full" id="submitButton" type="submit">Zaloguj się</button>
-              </form>
-
-              <div id="authMessage" class="message"></div>
-              <p class="small">Nowe konto może wymagać potwierdzenia adresu e-mail i akceptacji administratora.</p>
-            </div>
-
-            <div id="accountView" class="hidden">
-              <h2 id="accountTitle">Twoje konto</h2>
-              <p id="accountText" class="subtitle"></p>
-              <div id="accountEmail" class="status-box"></div>
-              <button class="button secondary full" id="logoutButton" type="button">Wyloguj się</button>
-            </div>
-
-            <div id="passwordChangeView" class="hidden">
-              <h2>Ustaw nowe hasło</h2>
-              <p class="subtitle">Administrator wymusił zmianę hasła. Zmień je, aby przejść dalej.</p>
-              <form id="passwordChangeForm">
-                <label for="newPassword">Nowe hasło</label>
-                <input id="newPassword" type="password" minlength="8" required placeholder="Minimum 8 znaków">
-                <label for="newPasswordRepeat">Powtórz nowe hasło</label>
-                <input id="newPasswordRepeat" type="password" minlength="8" required placeholder="Powtórz hasło">
-                <button class="button full" type="submit">Zapisz nowe hasło</button>
-              </form>
-              <div id="passwordMessage" class="message"></div>
+            <div class="home-hero-actions">
+              <button class="button" type="button" onclick="showPage('trips')">
+                Zobacz wypady
+              </button>
+              <button class="button secondary" type="button" onclick="showPage('about')">
+                O stronie
+              </button>
             </div>
           </div>
         </div>
-      </section>
+</section>
 
       <section id="page-trips" class="page">
         <div class="section-header">
