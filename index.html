@@ -467,6 +467,179 @@
       display: block;
     }
 
+  
+    .schedule-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .schedule-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .schedule-day {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(8, 32, 39, 0.78);
+    }
+
+    .schedule-day summary {
+      display: grid;
+      grid-template-columns: minmax(150px, .8fr) minmax(180px, 1fr) minmax(180px, 1.2fr);
+      gap: 16px;
+      align-items: center;
+      padding: 18px;
+      cursor: pointer;
+      list-style: none;
+    }
+
+    .schedule-day summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .schedule-day summary::after {
+      content: "Rozwiń";
+      justify-self: end;
+      color: var(--accent);
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .schedule-day[open] summary::after {
+      content: "Zwiń";
+    }
+
+    .schedule-day-title {
+      font-weight: 900;
+      font-size: 18px;
+    }
+
+    .schedule-day-route,
+    .schedule-day-plan {
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .schedule-day-body {
+      padding: 0 18px 20px;
+      border-top: 1px solid var(--line);
+    }
+
+    .schedule-fields {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .schedule-fields .wide {
+      grid-column: 1 / -1;
+    }
+
+    .schedule-value {
+      min-height: 48px;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: var(--text);
+      background: rgba(255,255,255,.045);
+      white-space: pre-wrap;
+    }
+
+    .timeline {
+      position: relative;
+      display: grid;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .timeline-item {
+      display: grid;
+      grid-template-columns: 76px minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: start;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.04);
+    }
+
+    .timeline-time {
+      color: var(--accent);
+      font-weight: 900;
+      font-size: 16px;
+    }
+
+    .timeline-title {
+      margin-bottom: 4px;
+      font-weight: 800;
+    }
+
+    .timeline-meta {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+
+    .schedule-item-form {
+      display: grid;
+      grid-template-columns: 120px 1fr 1fr;
+      gap: 12px;
+      margin-top: 16px;
+      padding: 16px;
+      border: 1px dashed var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.025);
+    }
+
+    .schedule-item-form .wide {
+      grid-column: 1 / -1;
+    }
+
+    .schedule-empty {
+      padding: 18px;
+      text-align: center;
+      color: var(--muted);
+      border: 1px dashed var(--line);
+      border-radius: 14px;
+    }
+
+    @media (max-width: 760px) {
+      .schedule-day summary {
+        grid-template-columns: 1fr;
+        gap: 7px;
+      }
+
+      .schedule-day summary::after {
+        justify-self: start;
+      }
+
+      .schedule-fields,
+      .schedule-item-form {
+        grid-template-columns: 1fr;
+      }
+
+      .schedule-fields .wide,
+      .schedule-item-form .wide {
+        grid-column: auto;
+      }
+
+      .timeline-item {
+        grid-template-columns: 62px minmax(0, 1fr);
+      }
+
+      .timeline-item .actions {
+        grid-column: 1 / -1;
+      }
+    }
+
   </style>
 </head>
 
@@ -601,7 +774,16 @@
         </div>
 
         <div id="trip-tab-harmonogram" class="trip-tab-content">
-          <div class="card placeholder-panel"><div><h2>Harmonogram</h2><p class="muted">Plan wyjazdu dzień po dniu dodamy w kolejnym etapie.</p></div></div>
+          <div class="schedule-toolbar">
+            <div>
+              <h2>Harmonogram wyjazdu</h2>
+              <p class="muted">
+                Dni są tworzone automatycznie na podstawie dat rozpoczęcia i zakończenia wyjazdu.
+              </p>
+            </div>
+          </div>
+          <div id="scheduleMessage" class="message"></div>
+          <div id="scheduleList" class="schedule-list"></div>
         </div>
 
         <div id="trip-tab-mapa" class="trip-tab-content">
@@ -740,6 +922,9 @@
     let adminUsers = [];
     let availableTrips = [];
     let selectedTrip = null;
+    let selectedTripRole = null;
+    let scheduleDays = [];
+    let scheduleItems = [];
 
     const authView = document.getElementById("authView");
     const accountView = document.getElementById("accountView");
@@ -1120,7 +1305,7 @@
       showPage("trip-detail");
     }
 
-    function activateTripTab(tabName) {
+    async function activateTripTab(tabName) {
       document.querySelectorAll(".trip-tab").forEach(button => {
         button.classList.toggle("active", button.dataset.tripTab === tabName);
       });
@@ -1128,11 +1313,387 @@
       document.querySelectorAll(".trip-tab-content").forEach(content => {
         content.classList.toggle("active", content.id === `trip-tab-${tabName}`);
       });
+
+      if (tabName === "harmonogram" && selectedTrip) {
+        await loadSchedule();
+      }
     }
 
     document.querySelectorAll(".trip-tab").forEach(button => {
       button.addEventListener("click", () => activateTripTab(button.dataset.tripTab));
     });
+
+    function polishWeekday(dateString) {
+      if (!dateString) return "";
+      const date = new Date(`${dateString}T12:00:00`);
+      return new Intl.DateTimeFormat("pl-PL", { weekday: "long" }).format(date);
+    }
+
+    function displayTime(timeValue) {
+      return timeValue ? String(timeValue).slice(0, 5) : "—";
+    }
+
+    function canEditDay() {
+      return currentProfile?.global_role === "administrator";
+    }
+
+    function canAddScheduleItem() {
+      return currentProfile?.global_role === "administrator"
+        || selectedTripRole === "uczestnik";
+    }
+
+    function canModifyScheduleItem(item) {
+      return currentProfile?.global_role === "administrator"
+        || item.created_by === currentUser?.id;
+    }
+
+    async function resolveSelectedTripRole() {
+      if (currentProfile?.global_role === "administrator") {
+        selectedTripRole = "administrator";
+        return;
+      }
+
+      const { data, error } = await client
+        .from("trip_members")
+        .select("role")
+        .eq("trip_id", selectedTrip.id)
+        .eq("user_id", currentUser.id)
+        .maybeSingle();
+
+      if (error) {
+        console.warn("Nie udało się sprawdzić roli w wyjeździe:", error);
+      }
+
+      selectedTripRole = data?.role || null;
+    }
+
+    async function loadSchedule() {
+      const list = document.getElementById("scheduleList");
+      const message = document.getElementById("scheduleMessage");
+
+      if (!selectedTrip) return;
+
+      list.innerHTML = "";
+      showMessage(message, "Ładowanie harmonogramu...");
+
+      await resolveSelectedTripRole();
+
+      const { data: daysData, error: daysError } = await client
+        .from("schedule_days")
+        .select("*")
+        .eq("trip_id", selectedTrip.id)
+        .eq("is_active", true)
+        .order("day_date", { ascending: true });
+
+      if (daysError) {
+        showMessage(message, daysError.message, "error");
+        return;
+      }
+
+      scheduleDays = daysData || [];
+
+      if (!scheduleDays.length) {
+        showMessage(
+          message,
+          "Brak dni harmonogramu. Sprawdź, czy wyjazd ma ustawioną datę rozpoczęcia i zakończenia.",
+          "warning"
+        );
+        return;
+      }
+
+      const dayIds = scheduleDays.map(day => day.id);
+      let itemsData = [];
+
+      if (dayIds.length) {
+        const { data, error } = await client
+          .from("schedule_items")
+          .select("*")
+          .in("schedule_day_id", dayIds)
+          .order("item_time", { ascending: true, nullsFirst: false })
+          .order("created_at", { ascending: true });
+
+        if (error) {
+          showMessage(message, error.message, "error");
+          return;
+        }
+
+        itemsData = data || [];
+      }
+
+      scheduleItems = itemsData;
+      showMessage(message, "");
+      renderSchedule();
+    }
+
+    function renderSchedule() {
+      const list = document.getElementById("scheduleList");
+
+      list.innerHTML = scheduleDays.map((day, index) => {
+        const items = scheduleItems.filter(item => item.schedule_day_id === day.id);
+        const routeText = [day.route_from, day.route_to].filter(Boolean).join(" → ") || "Trasa nieuzupełniona";
+        const planText = day.daily_plan || "Brak planu dnia";
+
+        return `
+          <details class="schedule-day" ${index === 0 ? "open" : ""}>
+            <summary>
+              <div>
+                <div class="schedule-day-title">
+                  Dzień ${day.day_number} — ${escapeHtml(polishWeekday(day.day_date))}
+                </div>
+                <div class="trip-meta">${formatDate(day.day_date)}</div>
+              </div>
+              <div class="schedule-day-route">${escapeHtml(routeText)}</div>
+              <div class="schedule-day-plan">${escapeHtml(planText)}</div>
+            </summary>
+
+            <div class="schedule-day-body">
+              ${renderDayFields(day)}
+
+              <h3>Plan godzina po godzinie</h3>
+
+              <div class="timeline">
+                ${items.length
+                  ? items.map(item => renderScheduleItem(item)).join("")
+                  : '<div class="schedule-empty">Nie dodano jeszcze punktów godzinowych.</div>'
+                }
+              </div>
+
+              ${canAddScheduleItem() ? renderScheduleItemForm(day.id) : `
+                <p class="muted">Masz dostęp tylko do podglądu harmonogramu.</p>
+              `}
+            </div>
+          </details>
+        `;
+      }).join("");
+    }
+
+    function renderDayFields(day) {
+      if (!canEditDay()) {
+        return `
+          <div class="schedule-fields">
+            <div>
+              <label>Gdzie jesteśmy / nocujemy</label>
+              <div class="schedule-value">${escapeHtml(day.stay_location || "Nie uzupełniono")}</div>
+            </div>
+            <div>
+              <label>Skąd jedziemy</label>
+              <div class="schedule-value">${escapeHtml(day.route_from || "Nie uzupełniono")}</div>
+            </div>
+            <div>
+              <label>Dokąd jedziemy</label>
+              <div class="schedule-value">${escapeHtml(day.route_to || "Nie uzupełniono")}</div>
+            </div>
+            <div>
+              <label>Co robimy</label>
+              <div class="schedule-value">${escapeHtml(day.daily_plan || "Nie uzupełniono")}</div>
+            </div>
+            <div class="wide">
+              <label>Uwagi</label>
+              <div class="schedule-value">${escapeHtml(day.notes || "Brak uwag")}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <form class="schedule-fields" onsubmit="saveScheduleDay(event, '${day.id}')">
+          <div>
+            <label>Gdzie jesteśmy / nocujemy</label>
+            <input name="stay_location" value="${escapeHtml(day.stay_location || "")}" placeholder="np. Camping Wachau">
+          </div>
+          <div>
+            <label>Skąd jedziemy</label>
+            <input name="route_from" value="${escapeHtml(day.route_from || "")}" placeholder="np. Leśnica">
+          </div>
+          <div>
+            <label>Dokąd jedziemy</label>
+            <input name="route_to" value="${escapeHtml(day.route_to || "")}" placeholder="np. Melk">
+          </div>
+          <div>
+            <label>Co robimy</label>
+            <textarea name="daily_plan" placeholder="Ogólny plan dnia">${escapeHtml(day.daily_plan || "")}</textarea>
+          </div>
+          <div class="wide">
+            <label>Uwagi</label>
+            <textarea name="notes" placeholder="Dodatkowe informacje">${escapeHtml(day.notes || "")}</textarea>
+          </div>
+          <div class="wide">
+            <button class="button" type="submit">Zapisz informacje dnia</button>
+          </div>
+        </form>
+      `;
+    }
+
+    function renderScheduleItem(item) {
+      const place = item.location ? `Miejsce: ${item.location}` : "";
+      const description = item.description || "";
+      const meta = [place, description].filter(Boolean).join("\n");
+
+      return `
+        <div class="timeline-item">
+          <div class="timeline-time">${escapeHtml(displayTime(item.item_time))}</div>
+          <div>
+            <div class="timeline-title">${escapeHtml(item.title)}</div>
+            <div class="timeline-meta">${escapeHtml(meta || "Brak dodatkowego opisu")}</div>
+          </div>
+          ${canModifyScheduleItem(item) ? `
+            <div class="actions">
+              <button class="button secondary small-button" type="button"
+                onclick="editScheduleItem('${item.id}')">Edytuj</button>
+              <button class="button danger small-button" type="button"
+                onclick="deleteScheduleItem('${item.id}')">Usuń</button>
+            </div>
+          ` : ""}
+        </div>
+      `;
+    }
+
+    function renderScheduleItemForm(dayId) {
+      return `
+        <form class="schedule-item-form" onsubmit="addScheduleItem(event, '${dayId}')">
+          <div>
+            <label>Godzina</label>
+            <input type="time" name="item_time">
+          </div>
+          <div>
+            <label>Co robimy</label>
+            <input name="title" required placeholder="np. Wyjazd na trasę rowerową">
+          </div>
+          <div>
+            <label>Miejsce</label>
+            <input name="location" placeholder="np. Tulln">
+          </div>
+          <div class="wide">
+            <label>Opis</label>
+            <textarea name="description" placeholder="Szczegóły punktu harmonogramu"></textarea>
+          </div>
+          <div class="wide">
+            <button class="button" type="submit">+ Dodaj punkt harmonogramu</button>
+          </div>
+        </form>
+      `;
+    }
+
+    async function saveScheduleDay(event, dayId) {
+      event.preventDefault();
+      if (!canEditDay()) return;
+
+      const form = event.currentTarget;
+      const button = form.querySelector('button[type="submit"]');
+      button.disabled = true;
+
+      const values = Object.fromEntries(new FormData(form).entries());
+
+      const { error } = await client
+        .from("schedule_days")
+        .update({
+          stay_location: values.stay_location.trim() || null,
+          route_from: values.route_from.trim() || null,
+          route_to: values.route_to.trim() || null,
+          daily_plan: values.daily_plan.trim() || null,
+          notes: values.notes.trim() || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", dayId);
+
+      button.disabled = false;
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      await loadSchedule();
+    }
+
+    async function addScheduleItem(event, dayId) {
+      event.preventDefault();
+
+      if (!canAddScheduleItem()) {
+        alert("Nie masz uprawnień do dodawania punktów.");
+        return;
+      }
+
+      const form = event.currentTarget;
+      const button = form.querySelector('button[type="submit"]');
+      button.disabled = true;
+
+      const values = Object.fromEntries(new FormData(form).entries());
+
+      const { error } = await client
+        .from("schedule_items")
+        .insert({
+          schedule_day_id: dayId,
+          item_time: values.item_time || null,
+          title: values.title.trim(),
+          location: values.location.trim() || null,
+          description: values.description.trim() || null,
+          created_by: currentUser.id
+        });
+
+      button.disabled = false;
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      await loadSchedule();
+    }
+
+    async function editScheduleItem(itemId) {
+      const item = scheduleItems.find(entry => entry.id === itemId);
+      if (!item || !canModifyScheduleItem(item)) return;
+
+      const newTime = prompt("Godzina (HH:MM):", displayTime(item.item_time) === "—" ? "" : displayTime(item.item_time));
+      if (newTime === null) return;
+
+      const newTitle = prompt("Co robimy?", item.title);
+      if (newTitle === null || !newTitle.trim()) return;
+
+      const newLocation = prompt("Miejsce:", item.location || "");
+      if (newLocation === null) return;
+
+      const newDescription = prompt("Opis:", item.description || "");
+      if (newDescription === null) return;
+
+      const { error } = await client
+        .from("schedule_items")
+        .update({
+          item_time: newTime.trim() || null,
+          title: newTitle.trim(),
+          location: newLocation.trim() || null,
+          description: newDescription.trim() || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", itemId);
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      await loadSchedule();
+    }
+
+    async function deleteScheduleItem(itemId) {
+      const item = scheduleItems.find(entry => entry.id === itemId);
+      if (!item || !canModifyScheduleItem(item)) return;
+
+      if (!confirm("Czy na pewno usunąć ten punkt harmonogramu?")) return;
+
+      const { error } = await client
+        .from("schedule_items")
+        .delete()
+        .eq("id", itemId);
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      await loadSchedule();
+    }
 
     async function loadAdminPanel() {
       const isAdmin = currentProfile?.global_role === "administrator" && currentProfile?.status === "active";
