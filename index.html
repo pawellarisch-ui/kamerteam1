@@ -2206,7 +2206,7 @@
         </div>
 
         <div class="sidebar-nav">
-          <button class="nav-button active" data-page="home">O stronie</button>
+          <button class="nav-button active" id="homeNavButton" type="button">Strona główna</button>
           <button class="nav-button" data-page="trips">Wypady</button>
           <button class="nav-button" data-page="contact">Kontakt</button>
           <button class="nav-button" data-page="install">Aplikacja na iPhone</button>
@@ -3037,6 +3037,7 @@
       }
 
       document.body.classList.add("is-active-session");
+      setTimeout(() => openCurrentTripAsHome(), 0);
       accountTitle.textContent = `Witaj, ${userDisplayName(currentProfile)}`;
       accountText.textContent = isAdmin
         ? "Masz pełny dostęp administracyjny do portalu."
@@ -5865,6 +5866,42 @@
 
 
 
+
+    async function openCurrentTripAsHome() {
+      if (!currentUser || currentProfile?.status !== "active") {
+        showPage("home");
+        return;
+      }
+
+      const { data, error } = await client
+        .from("trips")
+        .select("id, title, description, start_date, end_date, created_at, is_current")
+        .eq("is_current", true)
+        .maybeSingle();
+
+      if (error || !data) {
+        showPage("home");
+        return;
+      }
+
+      selectedTrip = data;
+
+      document.getElementById("tripDetailTitle").textContent = selectedTrip.title;
+      document.getElementById("tripDetailDates").textContent =
+        `${formatDate(selectedTrip.start_date)} – ${formatDate(selectedTrip.end_date)}`;
+      document.getElementById("tripDetailDescription").textContent =
+        selectedTrip.description || "Brak dodatkowego opisu.";
+
+      await activateTripTab("pulpit");
+      showPage("trip-detail");
+
+      document.querySelectorAll(".sidebar-nav .nav-button").forEach(button => {
+        button.classList.remove("active");
+      });
+      document.getElementById("homeNavButton")?.classList.add("active");
+    }
+
+
     async function loadPublicCurrentTrip() {
       const box = document.getElementById("currentTripPublic");
       const title = document.getElementById("currentTripPublicTitle");
@@ -5914,6 +5951,20 @@
         loadPublicCurrentTrip()
       ]);
     }
+
+
+    function setupCurrentTripHomeButton() {
+      document.getElementById("homeNavButton")?.addEventListener("click", async () => {
+        await openCurrentTripAsHome();
+      });
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", setupCurrentTripHomeButton);
+    } else {
+      setupCurrentTripHomeButton();
+    }
+
 
     function setupCurrentTripPublicView() {
       loadPublicCurrentTrip();
