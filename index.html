@@ -2868,6 +2868,21 @@
             </label>
           </div>
 
+          <div class="admin-setting-row" style="margin-top:18px; padding-top:18px; border-top:1px solid var(--line);">
+            <div class="admin-setting-copy">
+              <h3>Automatyczne przypisanie do aktualnego wyjazdu</h3>
+              <p>
+                Nowo założone konto zostanie automatycznie przypisane do aktualnego wyjazdu
+                z rolą Gość. Użytkownik uzyska tylko podgląd i zobaczy wyjazd po aktywacji konta.
+              </p>
+            </div>
+
+            <label class="admin-switch">
+              <input id="autoAssignCurrentTripCheckbox" type="checkbox">
+              Przypisz jako Gość
+            </label>
+          </div>
+
           <div id="adminSettingsMessage" class="message"></div>
         </section>
 
@@ -6332,16 +6347,21 @@
 
 
     async function loadAdminSettings() {
-      const checkbox = document.getElementById("autoApproveUsersCheckbox");
+      const autoApproveCheckbox = document.getElementById("autoApproveUsersCheckbox");
+      const autoAssignCheckbox = document.getElementById("autoAssignCurrentTripCheckbox");
       const message = document.getElementById("adminSettingsMessage");
 
-      if (!checkbox || currentProfile?.global_role !== "administrator") return;
+      if (
+        !autoApproveCheckbox
+        || !autoAssignCheckbox
+        || currentProfile?.global_role !== "administrator"
+      ) return;
 
       showMessage(message, "Ładowanie ustawień...");
 
       const { data, error } = await client
         .from("app_settings")
-        .select("auto_approve_users")
+        .select("auto_approve_users, auto_assign_current_trip")
         .eq("id", 1)
         .single();
 
@@ -6350,7 +6370,8 @@
         return;
       }
 
-      checkbox.checked = Boolean(data?.auto_approve_users);
+      autoApproveCheckbox.checked = Boolean(data?.auto_approve_users);
+      autoAssignCheckbox.checked = Boolean(data?.auto_assign_current_trip);
       showMessage(message, "");
     }
 
@@ -6387,6 +6408,42 @@
         "success"
       );
     }
+
+
+    async function updateAutoAssignCurrentTrip(enabled) {
+      const checkbox = document.getElementById("autoAssignCurrentTripCheckbox");
+      const message = document.getElementById("adminSettingsMessage");
+
+      if (currentProfile?.global_role !== "administrator") return;
+
+      checkbox.disabled = true;
+      showMessage(message, "Zapisywanie ustawienia...");
+
+      const { error } = await client
+        .from("app_settings")
+        .update({
+          auto_assign_current_trip: enabled,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", 1);
+
+      checkbox.disabled = false;
+
+      if (error) {
+        checkbox.checked = !enabled;
+        showMessage(message, error.message, "error");
+        return;
+      }
+
+      showMessage(
+        message,
+        enabled
+          ? "Nowe konta będą przypisywane do aktualnego wyjazdu jako Gość."
+          : "Automatyczne przypisywanie nowych kont zostało wyłączone.",
+        "success"
+      );
+    }
+
 
     async function deleteUserAccount(userId, encodedName) {
       if (currentProfile?.global_role !== "administrator") return;
@@ -6425,10 +6482,15 @@
     }
 
     function setupAdminSettingsControls() {
-      const checkbox = document.getElementById("autoApproveUsersCheckbox");
+      const autoApproveCheckbox = document.getElementById("autoApproveUsersCheckbox");
+      const autoAssignCheckbox = document.getElementById("autoAssignCurrentTripCheckbox");
 
-      checkbox?.addEventListener("change", event => {
+      autoApproveCheckbox?.addEventListener("change", event => {
         updateAutoApproveUsers(event.target.checked);
+      });
+
+      autoAssignCheckbox?.addEventListener("change", event => {
+        updateAutoAssignCurrentTrip(event.target.checked);
       });
     }
 
