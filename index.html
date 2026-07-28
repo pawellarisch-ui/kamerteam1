@@ -1749,6 +1749,79 @@
       accent-color: var(--accent);
     }
 
+  
+    .contact-layout {
+      display: grid;
+      grid-template-columns: minmax(260px, .8fr) minmax(320px, 1.2fr);
+      gap: 22px;
+      align-items: start;
+    }
+
+    .contact-card,
+    .contact-form-card {
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255,255,255,.04);
+    }
+
+    .contact-person {
+      margin: 0 0 6px;
+      font-size: 24px;
+      font-weight: 900;
+    }
+
+    .contact-role {
+      margin-bottom: 20px;
+      color: var(--accent);
+      font-weight: 800;
+    }
+
+    .contact-row {
+      display: grid;
+      gap: 5px;
+      margin-top: 15px;
+    }
+
+    .contact-label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .contact-link {
+      color: var(--text);
+      font-size: 17px;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .contact-link:hover {
+      color: var(--accent);
+    }
+
+    .contact-form {
+      display: grid;
+      gap: 13px;
+    }
+
+    .contact-form textarea {
+      min-height: 180px;
+    }
+
+    .contact-help {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 760px) {
+      .contact-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
   </style>
 </head>
 
@@ -2170,14 +2243,89 @@
         <div class="section-header">
           <div>
             <h1>Kontakt</h1>
-            <p class="lead">Sekcja kontaktowa portalu KamperTeam.eu.</p>
+            <p class="lead">
+              Skontaktuj się z Administratorem portalu KamperTeam.
+            </p>
           </div>
         </div>
-        <div class="card">
-          <h2>Kontakt z administratorem</h2>
-          <p class="muted">Dane kontaktowe uzupełnimy w kolejnym etapie.</p>
+
+        <div class="contact-layout">
+          <div class="contact-card">
+            <div class="contact-person">Paweł Larisch</div>
+            <div class="contact-role">Administrator</div>
+
+            <div class="contact-row">
+              <div class="contact-label">Telefon</div>
+              <a class="contact-link" href="tel:+48731150011">
+                +48 731 150 011
+              </a>
+            </div>
+
+            <div class="contact-row">
+              <div class="contact-label">E-mail</div>
+              <a class="contact-link" href="mailto:pawel.larisch@gmail.com">
+                pawel.larisch@gmail.com
+              </a>
+            </div>
+          </div>
+
+          <div class="contact-form-card">
+            <h2>Napisz wiadomość</h2>
+
+            <form id="contactForm" class="contact-form">
+              <div>
+                <label for="contactName">Imię i nazwisko</label>
+                <input
+                  id="contactName"
+                  name="name"
+                  required
+                  placeholder="Twoje imię i nazwisko"
+                >
+              </div>
+
+              <div>
+                <label for="contactEmail">Twój adres e-mail</label>
+                <input
+                  id="contactEmail"
+                  name="email"
+                  type="email"
+                  required
+                  placeholder="twoj@email.pl"
+                >
+              </div>
+
+              <div>
+                <label for="contactSubject">Temat</label>
+                <input
+                  id="contactSubject"
+                  name="subject"
+                  required
+                  placeholder="Temat wiadomości"
+                >
+              </div>
+
+              <div>
+                <label for="contactMessageText">Wiadomość</label>
+                <textarea
+                  id="contactMessageText"
+                  name="message"
+                  required
+                  placeholder="Napisz wiadomość..."
+                ></textarea>
+              </div>
+
+              <button class="button" type="submit">
+                Wyślij wiadomość
+              </button>
+
+              <p class="contact-help">
+                Po kliknięciu otworzy się aplikacja pocztowa z przygotowaną wiadomością.
+                Aby ją wysłać, zatwierdź wysyłkę w aplikacji Mail.
+              </p>
+            </form>
+          </div>
         </div>
-      </section>
+</section>
 
       <section id="page-admin" class="page">
         <div class="section-header">
@@ -5339,6 +5487,40 @@
       setupPhotoControls();
     }
 
+
+
+
+    function setupContactForm() {
+      const form = document.getElementById("contactForm");
+      if (!form) return;
+
+      form.addEventListener("submit", event => {
+        event.preventDefault();
+
+        const values = Object.fromEntries(new FormData(form).entries());
+
+        const subject = `[KamperTeam] ${values.subject.trim()}`;
+        const body = [
+          `Imię i nazwisko: ${values.name.trim()}`,
+          `E-mail nadawcy: ${values.email.trim()}`,
+          "",
+          values.message.trim()
+        ].join("\n");
+
+        const mailtoUrl =
+          `mailto:pawel.larisch@gmail.com`
+          + `?subject=${encodeURIComponent(subject)}`
+          + `&body=${encodeURIComponent(body)}`;
+
+        window.location.href = mailtoUrl;
+      });
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", setupContactForm);
+    } else {
+      setupContactForm();
+    }
 
 
     async function loadAdminSettings() {
