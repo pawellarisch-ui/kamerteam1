@@ -2256,141 +2256,318 @@
     }
 
   
-    .place-address-link {
-      display: inline-flex;
-      align-items: flex-start;
-      gap: 7px;
-      color: var(--accent);
-      font-weight: 800;
-      line-height: 1.45;
-      overflow-wrap: anywhere;
-      text-decoration: none;
-    }
-
-    .place-address-link:hover {
-      text-decoration: underline;
-    }
-.maps-address-link {
-      display: inline-flex;
-      align-items: flex-start;
-      gap: 7px;
-      color: var(--text);
-      font-weight: 700;
-      line-height: 1.45;
-      text-decoration: none;
-      overflow-wrap: anywhere;
-    }
-
-    .maps-address-link:hover {
-      color: var(--accent);
-      text-decoration: underline;
-    }
-
-    .maps-pin {
+    .map-icon-link {
+      display: inline-grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
       flex: 0 0 auto;
+      margin-left: 7px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
       color: var(--accent);
-      font-size: 19px;
-      line-height: 1.1;
+      background: rgba(255,255,255,.06);
+      text-decoration: none;
+      vertical-align: middle;
+      font-size: 17px;
+      line-height: 1;
+    }
+
+    .map-icon-link:hover {
+      border-color: var(--accent);
+      background: rgba(245,196,81,.12);
+    }
+
+    .address-with-map {
+      display: flex;
+      align-items: flex-start;
+      gap: 7px;
+      min-width: 0;
+    }
+
+    .address-with-map-text {
+      min-width: 0;
+      flex: 1 1 auto;
+      overflow-wrap: anywhere;
+      line-height: 1.45;
     }
 
   
-    .location-map-toolbar {
+    .map-inner-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 18px 0;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .map-inner-tab {
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      color: var(--text);
+      background: rgba(255,255,255,.05);
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .map-inner-tab.active {
+      color: #17242a;
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .map-inner-panel {
+      display: none;
+    }
+
+    .map-inner-panel.active {
+      display: block;
+    }
+
+    #tripPlacesMap {
+      width: min(100%, 720px);
+      aspect-ratio: 1 / 1;
+      height: auto;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      background: rgba(255,255,255,.04);
+    }
+
+    .map-points-summary {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 14px 0;
+    }
+
+    .map-point-badge {
+      display: inline-flex;
+      padding: 6px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(255,255,255,.04);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .map-geocode-status {
+      margin: 10px 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .map-repair-panel {
+      min-height: 420px;
+      display: grid;
+      place-items: center;
+      padding: 30px;
+      border: 1px dashed var(--line);
+      border-radius: 18px;
+      text-align: center;
+      background: rgba(255,255,255,.025);
+    }
+
+    .map-repair-icon {
+      margin-bottom: 12px;
+      font-size: 54px;
+    }
+
+    .leaflet-popup-content-wrapper,
+    .leaflet-popup-tip {
+      background: #0b2f39;
+      color: #f5fbfc;
+    }
+
+    .leaflet-popup-content a {
+      color: #f5c451;
+      font-weight: 800;
+    }
+
+    @media (max-width: 700px) {
+      #tripPlacesMap {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        height: auto;
+      }
+    }
+
+  
+    .map-preview-toolbar {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-      gap: 16px;
-      margin-bottom: 14px;
-    }
-
-    .location-map-legend {
-      display: flex;
-      gap: 18px;
+      align-items: center;
+      gap: 10px;
       flex-wrap: wrap;
-      margin-bottom: 14px;
-      color: var(--muted);
-      font-size: 14px;
-      font-weight: 700;
+      margin: 10px 0 12px;
     }
 
-    .location-map-legend span {
+    .map-preview-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .map-small-button {
+      padding: 9px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: var(--text);
+      background: rgba(255,255,255,.05);
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .map-small-button:hover {
+      border-color: var(--accent);
+    }
+
+    .map-loading-placeholder {
+      min-height: 100%;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .map-expanded-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: none;
+      padding: 18px;
+      background: rgba(3, 14, 18, .94);
+    }
+
+    .map-expanded-overlay.visible {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 12px;
+    }
+
+    .map-expanded-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .map-expanded-overlay #tripPlacesMap {
+      height: 100%;
+      min-height: 0;
+      border-radius: 16px;
+    }
+
+    body.map-expanded-open {
+      overflow: hidden;
+    }
+
+  
+    #map-panel-points {
+      max-width: 760px;
+    }
+
+    .map-source-legend {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 10px 0 14px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .map-source-legend span {
       display: inline-flex;
       align-items: center;
       gap: 7px;
     }
 
-    .location-map-dot {
-      width: 12px;
-      height: 12px;
+    .map-source-dot {
+      width: 13px;
+      height: 13px;
       border-radius: 50%;
-      display: inline-block;
-      border: 2px solid rgba(255,255,255,.85);
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 1px rgba(0,0,0,.25);
     }
 
-    .location-map-dot-location {
-      background: #2f80ed;
+    .map-source-dot.camping {
+      background: #f5c451;
     }
 
-    .location-map-dot-camping {
-      background: #f7c74f;
+    .map-source-dot.location {
+      background: #2f9ed5;
     }
 
-    .location-map-canvas {
-      width: min(100%, 900px);
-      aspect-ratio: 1 / 0.72;
-      min-height: 420px;
-      border: 1px solid var(--line);
-      border-radius: 20px;
-      overflow: hidden;
-      background:
-        linear-gradient(rgba(255,255,255,.03), rgba(255,255,255,.03)),
-        var(--panel);
+    .custom-map-pin {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border: 2px solid #fff;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      box-shadow: 0 2px 7px rgba(0,0,0,.35);
     }
 
-    .location-map-setup {
-      width: min(100%, 900px);
-      margin-bottom: 14px;
-      padding: 18px;
-      border: 1px solid rgba(247,199,79,.45);
-      border-radius: 16px;
-      background: rgba(247,199,79,.08);
+    .custom-map-pin > span {
+      transform: rotate(45deg);
+      font-size: 14px;
+      line-height: 1;
     }
 
-    .location-map-setup code {
-      color: var(--accent);
+    .custom-map-pin.camping {
+      background: #f5c451;
+    }
+
+    .custom-map-pin.location {
+      background: #2f9ed5;
+    }
+
+  
+    .pins-table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.025)}
+    .pins-table{width:100%;border-collapse:collapse;min-width:660px}
+    .pins-table th,.pins-table td{padding:13px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+    .pins-table th{color:var(--muted);font-size:12px;font-weight:900;text-transform:uppercase;background:rgba(255,255,255,.035)}
+    .pins-table tbody tr:last-child td{border-bottom:0}
+    .pins-table-number{width:58px;color:var(--muted);font-weight:800}
+    .pins-table-category{width:170px;font-weight:800}
+    .pins-category-badge{display:inline-flex;padding:6px 9px;border:1px solid var(--line);border-radius:999px;white-space:nowrap;font-size:12px;font-weight:900}
+    .pins-category-badge.camping{color:#17242a;background:var(--accent);border-color:var(--accent)}
+    .pins-category-badge.location{color:var(--text);background:rgba(47,158,213,.18);border-color:rgba(47,158,213,.5)}
+    .pins-table-map{width:72px;text-align:center!important}
+    .pins-map-button{display:inline-grid;place-items:center;width:38px;height:38px;border:1px solid var(--line);border-radius:10px;color:var(--accent);background:rgba(255,255,255,.05);text-decoration:none;font-size:19px}
+    .pins-map-button:hover{border-color:var(--accent);background:rgba(245,196,81,.12)}
+    .pins-empty{padding:28px;color:var(--muted);text-align:center;line-height:1.5}
+
+  
+    .trip-address-fields {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .trip-address-different {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 12px 0;
       font-weight: 800;
+      cursor: pointer;
     }
 
-    .location-map-info {
-      max-width: 260px;
-      color: #17242a;
-      font-family: Arial, sans-serif;
+    .trip-address-different input {
+      width: auto;
+      margin: 0;
     }
 
-    .location-map-info strong {
-      display: block;
-      margin-bottom: 5px;
-      font-size: 15px;
-    }
-
-    .location-map-info p {
-      margin: 0 0 8px;
-      line-height: 1.4;
-    }
-
-    .location-map-info a {
-      color: #145dbf;
-      font-weight: 700;
-    }
-
-    @media (max-width: 760px) {
-      .location-map-toolbar {
-        display: grid;
-      }
-
-      .location-map-canvas {
-        min-height: 330px;
-        aspect-ratio: 1 / 1;
-      }
+    #tripEndAddressWrap.hidden {
+      display: none;
     }
 
   </style>
@@ -2536,7 +2713,6 @@
           <button class="trip-tab active" data-trip-tab="pulpit">Pulpit</button>
           <button class="trip-tab" data-trip-tab="harmonogram">Harmonogram</button>
           <button class="trip-tab" data-trip-tab="mapa">Mapa wyjazdu</button>
-          <button class="trip-tab" data-trip-tab="mapa-lokalizacji">Mapa lokalizacji</button>
           <button class="trip-tab" data-trip-tab="kempingi">Kempingi i postoje</button>
           <button class="trip-tab" data-trip-tab="miejsca">Miejsca</button>
           <button class="trip-tab" data-trip-tab="zadania">Lista zadań</button>
@@ -2575,53 +2751,30 @@
         </div>
 
         <div id="trip-tab-mapa" class="trip-tab-content">
-          <div class="route-map-toolbar">
-            <div>
-              <h2>Mapa wyjazdu</h2>
-              <p class="muted">
-                Trasa jest tworzona automatycznie z miejsc oznaczonych w Harmonogramie jako nocleg.
-              </p>
+          <div>
+            <h2>Mapa wyjazdu</h2>
+            <p class="muted">Adresy są pobierane automatycznie z zakładek „Kempingi i postoje” oraz „Miejsca”.</p>
+          </div>
+
+          <div class="map-inner-tabs">
+            <button class="map-inner-tab active" type="button" data-map-panel="pins">Pinezki</button>
+            <button class="map-inner-tab" type="button" data-map-panel="route">Trasa wyjazdu</button>
+          </div>
+
+          <div id="map-panel-pins" class="map-inner-panel active">
+            <div id="pinsTableMessage" class="message"></div>
+            <div id="pinsTableContainer"><div class="pins-empty">Ładowanie adresów...</div></div>
+          </div>
+
+          <div id="map-panel-route" class="map-inner-panel">
+            <div class="map-repair-panel">
+              <div>
+                <div class="map-repair-icon">🚧</div>
+                <h2>Trasa wyjazdu jest w remoncie</h2>
+                <p class="muted">Tutaj później dopracujemy wizualizację całej trasy.</p>
+              </div>
             </div>
           </div>
-
-          <div id="routeMessage" class="message"></div>
-          <div id="routeMapContainer"></div>
-        </div>
-
-        <div id="trip-tab-mapa-lokalizacji" class="trip-tab-content">
-          <div class="location-map-toolbar">
-            <div>
-              <h2>Mapa lokalizacji</h2>
-              <p class="muted">
-                Pinezki ze wszystkich adresów zapisanych w zakładkach Miejsca oraz Kempingi i postoje.
-              </p>
-            </div>
-
-            <button
-              id="refreshLocationMapButton"
-              class="button secondary"
-              type="button"
-            >
-              Odśwież mapę
-            </button>
-          </div>
-
-          <div class="location-map-legend">
-            <span><strong class="location-map-dot location-map-dot-location"></strong> Miejsca</span>
-            <span><strong class="location-map-dot location-map-dot-camping"></strong> Kempingi i postoje</span>
-          </div>
-
-          <div id="locationMapMessage" class="message"></div>
-
-          <div id="locationMapSetup" class="location-map-setup hidden">
-            <h3>Mapa Google wymaga klucza API</h3>
-            <p>
-              W pliku <strong>index.html</strong> wklej klucz przy ustawieniu
-              <code>GOOGLE_MAPS_API_KEY</code>.
-            </p>
-          </div>
-
-          <div id="locationMapCanvas" class="location-map-canvas" aria-label="Mapa lokalizacji"></div>
         </div>
 
         <div id="trip-tab-kempingi" class="trip-tab-content">
@@ -2999,6 +3152,30 @@
                 <label for="tripEnd">Data zakończenia</label>
                 <input id="tripEnd" type="date">
 
+                <div class="trip-address-fields">
+                  <label for="tripStartAddress">Adres startu</label>
+                  <input
+                    id="tripStartAddress"
+                    type="text"
+                    required
+                    placeholder="np. Leśnica, ul. ..."
+                  >
+
+                  <label class="trip-address-different" for="tripDifferentEndAddress">
+                    <input id="tripDifferentEndAddress" type="checkbox">
+                    Adres końca jest inny niż adres startu
+                  </label>
+
+                  <div id="tripEndAddressWrap" class="hidden">
+                    <label for="tripEndAddress">Adres końca</label>
+                    <input
+                      id="tripEndAddress"
+                      type="text"
+                      placeholder="Wpisz adres zakończenia wyjazdu"
+                    >
+                  </div>
+                </div>
+
                 <button class="button full" type="submit">Utwórz wyjazd</button>
               </form>
               <div id="tripFormMessage" class="message"></div>
@@ -3139,10 +3316,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
-    // Klucz Google Maps JavaScript API.
-    // Po utworzeniu klucza w Google Cloud wklej go pomiędzy cudzysłowy.
-    const GOOGLE_MAPS_API_KEY = "AIzaSyCdd-LwgDKT5ZqBuQfvXOLmZkGpSSWWTtM";
-
     const SUPABASE_URL = "https://xzorbvkwfeaypuweptec.supabase.co";
     const SUPABASE_KEY = "sb_publishable_iBl7YOQZ14XNHF5vflZhdA_6l5U6-Uo";
     const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -3586,11 +3759,7 @@
       }
 
       if (tabName === "mapa" && selectedTrip) {
-        await loadRouteMap();
-      }
-
-      if (tabName === "mapa-lokalizacji" && selectedTrip) {
-        await loadLocationMap();
+        await loadPinsTable();
       }
 
       if (tabName === "pulpit" && selectedTrip) {
@@ -4287,237 +4456,84 @@
 
 
 
-    let locationGoogleMap = null;
-    let locationMapInfoWindow = null;
-    let locationMapMarkers = [];
-    let googleMapsLoaderPromise = null;
-
-    function loadGoogleMapsLibrary() {
-      if (window.google?.maps) {
-        return Promise.resolve(window.google.maps);
-      }
-
-      if (!GOOGLE_MAPS_API_KEY) {
-        return Promise.reject(new Error("Brak klucza Google Maps API."));
-      }
-
-      if (googleMapsLoaderPromise) return googleMapsLoaderPromise;
-
-      googleMapsLoaderPromise = new Promise((resolve, reject) => {
-        const callbackName = `initKamperTeamGoogleMaps_${Date.now()}`;
-
-        window[callbackName] = () => {
-          delete window[callbackName];
-          resolve(window.google.maps);
-        };
-
-        const script = document.createElement("script");
-        script.src =
-          `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(GOOGLE_MAPS_API_KEY)}` +
-          `&callback=${callbackName}&v=weekly&libraries=marker`;
-        script.async = true;
-        script.defer = true;
-        script.onerror = () => {
-          delete window[callbackName];
-          googleMapsLoaderPromise = null;
-          reject(new Error("Nie udało się wczytać Google Maps."));
-        };
-
-        document.head.appendChild(script);
+    function setupMapInnerTabs() {
+      document.querySelectorAll(".map-inner-tab").forEach(button => {
+        button.addEventListener("click", async () => {
+          const panelName = button.dataset.mapPanel;
+          document.querySelectorAll(".map-inner-tab").forEach(item => item.classList.toggle("active", item === button));
+          document.querySelectorAll(".map-inner-panel").forEach(panel => panel.classList.toggle("active", panel.id === `map-panel-${panelName}`));
+          if (panelName === "pins") await loadPinsTable();
+        });
       });
-
-      return googleMapsLoaderPromise;
     }
 
-    async function loadLocationMap() {
-      const message = document.getElementById("locationMapMessage");
-      const setup = document.getElementById("locationMapSetup");
-      const canvas = document.getElementById("locationMapCanvas");
+    async function loadPinsTable() {
+      const message = document.getElementById("pinsTableMessage");
+      const container = document.getElementById("pinsTableContainer");
+      if (!selectedTrip || !container) return;
 
-      if (!selectedTrip || !message || !setup || !canvas) return;
-
-      setup.classList.add("hidden");
-      showMessage(message, "Ładowanie mapy lokalizacji...");
-
-      if (!GOOGLE_MAPS_API_KEY) {
-        canvas.innerHTML = "";
-        setup.classList.remove("hidden");
-        showMessage(
-          message,
-          "Najpierw trzeba wkleić klucz Google Maps API do pliku index.html.",
-          "error"
-        );
-        return;
-      }
+      showMessage(message, "Ładowanie adresów...");
+      container.innerHTML = '<div class="pins-empty">Ładowanie adresów...</div>';
 
       const [
-        { data: locations, error: locationsError },
-        { data: places, error: placesError }
+        { data: campingData, error: campingError },
+        { data: locationsData, error: locationsError }
       ] = await Promise.all([
-        client
-          .from("trip_locations")
-          .select("id, name, description, address, website_url")
-          .eq("trip_id", selectedTrip.id)
-          .order("created_at", { ascending: true }),
-        client
-          .from("trip_places")
-          .select("id, name, description, address, website_url")
-          .eq("trip_id", selectedTrip.id)
-          .order("created_at", { ascending: true })
+        client.from("trip_places").select("id, name, address, place_type").eq("trip_id", selectedTrip.id).order("name", { ascending: true }),
+        client.from("trip_locations").select("id, name, address").eq("trip_id", selectedTrip.id).order("name", { ascending: true })
       ]);
 
-      const error = locationsError || placesError;
-
-      if (error) {
+      if (campingError || locationsError) {
+        const error = campingError || locationsError;
         showMessage(message, error.message, "error");
+        container.innerHTML = '<div class="pins-empty">Nie udało się pobrać adresów.</div>';
         return;
       }
 
-      const points = [
-        ...(locations || [])
-          .filter(item => String(item.address || "").trim())
-          .map(item => ({
-            ...item,
-            type: "location",
-            typeLabel: "Miejsce"
-          })),
-        ...(places || [])
-          .filter(item => String(item.address || "").trim())
-          .map(item => ({
-            ...item,
-            type: "camping",
-            typeLabel: "Kemping lub postój"
-          }))
+      const rows = [
+        ...(campingData || []).filter(item => item.address?.trim()).map(item => ({
+          name: item.name, address: item.address.trim(), category: "Kamping", categoryClass: "camping"
+        })),
+        ...(locationsData || []).filter(item => item.address?.trim()).map(item => ({
+          name: item.name, address: item.address.trim(), category: "Miejsce", categoryClass: "location"
+        }))
       ];
 
-      if (!points.length) {
-        canvas.innerHTML = `
-          <div class="empty-state">
-            <h3>Brak adresów do pokazania</h3>
-            <p>Dodaj adres w zakładce Miejsca albo Kempingi i postoje.</p>
-          </div>
-        `;
-        showMessage(message, "");
+      rows.sort((a,b) => a.category.localeCompare(b.category,"pl") || String(a.name||"").localeCompare(String(b.name||""),"pl"));
+      showMessage(message, "");
+
+      if (!rows.length) {
+        container.innerHTML = '<div class="pins-empty">Brak adresów. Dodaj adres w zakładce „Kempingi i postoje” albo „Miejsca”.</div>';
         return;
       }
 
-      try {
-        await loadGoogleMapsLibrary();
-        await renderLocationGoogleMap(points);
-        showMessage(
-          message,
-          `Pokazano ${points.length} ${points.length === 1 ? "lokalizację" : "lokalizacji"}.`,
-          "success"
-        );
-      } catch (mapError) {
-        showMessage(message, mapError.message, "error");
-      }
+      container.innerHTML = `
+        <div class="pins-table-wrap">
+          <table class="pins-table">
+            <thead>
+              <tr><th>LP</th><th>Kategoria</th><th>Nazwa</th><th>Adres</th><th class="pins-table-map">Pinezka</th></tr>
+            </thead>
+            <tbody>
+              ${rows.map((row,index)=>`
+                <tr>
+                  <td class="pins-table-number">${index+1}</td>
+                  <td class="pins-table-category"><span class="pins-category-badge ${row.categoryClass}">${escapeHtml(row.category)}</span></td>
+                  <td>${escapeHtml(row.name || "Bez nazwy")}</td>
+                  <td>${escapeHtml(row.address)}</td>
+                  <td class="pins-table-map">
+                    <a class="pins-map-button" href="${escapeHtml(googleMapsAddressUrl(row.address))}" target="_blank" rel="noopener noreferrer" title="Otwórz w Google Maps" aria-label="Otwórz w Google Maps">📍</a>
+                  </td>
+                </tr>`).join("")}
+            </tbody>
+          </table>
+        </div>`;
     }
 
-    async function renderLocationGoogleMap(points) {
-      const canvas = document.getElementById("locationMapCanvas");
-      canvas.innerHTML = "";
-
-      locationMapMarkers.forEach(marker => {
-        marker.setMap?.(null);
-        marker.map = null;
-      });
-      locationMapMarkers = [];
-
-      locationGoogleMap = new google.maps.Map(canvas, {
-        center: { lat: 55.6761, lng: 12.5683 },
-        zoom: 6,
-        mapTypeControl: true,
-        streetViewControl: false,
-        fullscreenControl: true,
-        zoomControl: true,
-        gestureHandling: "greedy"
-      });
-
-      locationMapInfoWindow = new google.maps.InfoWindow();
-      const geocoder = new google.maps.Geocoder();
-      const bounds = new google.maps.LatLngBounds();
-
-      let successfulMarkers = 0;
-
-      for (const point of points) {
-        try {
-          const response = await geocoder.geocode({ address: point.address });
-          const result = response.results?.[0];
-          if (!result) continue;
-
-          const position = result.geometry.location;
-          bounds.extend(position);
-
-          const marker = new google.maps.Marker({
-            map: locationGoogleMap,
-            position,
-            title: point.name,
-            label: {
-              text: point.type === "camping" ? "K" : "M",
-              color: point.type === "camping" ? "#17242a" : "#ffffff",
-              fontWeight: "800"
-            },
-            icon: {
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 12,
-              fillColor: point.type === "camping" ? "#f7c74f" : "#2f80ed",
-              fillOpacity: 1,
-              strokeColor: "#ffffff",
-              strokeWeight: 2
-            }
-          });
-
-          marker.addListener("click", () => {
-            const mapsUrl = googleMapsAddressUrl(point.address);
-            const website = normalizeWebsiteUrl(point.website_url || "");
-
-            locationMapInfoWindow.setContent(`
-              <div class="location-map-info">
-                <strong>${escapeHtml(point.name || point.typeLabel)}</strong>
-                <p>${escapeHtml(point.address)}</p>
-                ${point.description ? `<p>${escapeHtml(point.description)}</p>` : ""}
-                <a href="${escapeHtml(mapsUrl)}" target="_blank" rel="noopener noreferrer">
-                  Otwórz w Google Maps
-                </a>
-                ${website ? `
-                  <br>
-                  <a href="${escapeHtml(website)}" target="_blank" rel="noopener noreferrer">
-                    Otwórz stronę
-                  </a>
-                ` : ""}
-              </div>
-            `);
-
-            locationMapInfoWindow.open({
-              anchor: marker,
-              map: locationGoogleMap
-            });
-          });
-
-          locationMapMarkers.push(marker);
-          successfulMarkers += 1;
-        } catch (error) {
-          console.warn("Nie udało się odnaleźć adresu:", point.address, error);
-        }
-      }
-
-      if (!successfulMarkers) {
-        throw new Error("Google Maps nie odnalazło żadnego z zapisanych adresów.");
-      }
-
-      if (successfulMarkers === 1) {
-        locationGoogleMap.setCenter(bounds.getCenter());
-        locationGoogleMap.setZoom(14);
-      } else {
-        locationGoogleMap.fitBounds(bounds, 70);
-      }
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", setupMapInnerTabs);
+    } else {
+      setupMapInnerTabs();
     }
-
-    document.getElementById("refreshLocationMapButton")?.addEventListener("click", () => {
-      loadLocationMap();
-    });
-
 
     async function loadRouteMap() {
       const message = document.getElementById("routeMessage");
@@ -4834,16 +4850,17 @@
                     </td>
                     <td class="location-address">
                       ${location.address ? `
-                        <a
-                          class="maps-address-link"
-                          href="${escapeHtml(googleMapsAddressUrl(location.address))}"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          title="Otwórz adres w Google Maps"
-                        >
-                          <span class="maps-pin" aria-hidden="true">📍</span>
-                          <span>${escapeHtml(location.address)}</span>
-                        </a>
+                        <div class="address-with-map">
+                          <span class="address-with-map-text">${escapeHtml(location.address)}</span>
+                          <a
+                            class="map-icon-link"
+                            href="${escapeHtml(googleMapsAddressUrl(location.address))}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Otwórz w Google Maps"
+                            aria-label="Otwórz adres w Google Maps"
+                          >📍</a>
+                        </div>
                       ` : '<span class="muted">Brak adresu</span>'}
                     </td>
                     <td>
@@ -5523,16 +5540,17 @@
           </td>
           <td class="place-address">
             ${place.address ? `
-              <a
-                class="maps-address-link"
-                href="${escapeHtml(googleMapsAddressUrl(place.address))}"
-                target="_blank"
-                rel="noopener noreferrer"
-                title="Otwórz adres w Google Maps"
-              >
-                <span class="maps-pin" aria-hidden="true">📍</span>
-                <span>${escapeHtml(place.address)}</span>
-              </a>
+              <div class="address-with-map">
+                <span class="address-with-map-text">${escapeHtml(place.address)}</span>
+                <a
+                  class="map-icon-link"
+                  href="${escapeHtml(googleMapsAddressUrl(place.address))}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Otwórz w Google Maps"
+                  aria-label="Otwórz adres w Google Maps"
+                >📍</a>
+              </div>
             ` : '<span class="muted">Brak adresu</span>'}
           </td>
           <td><span class="place-type">${escapeHtml(placeTypeLabel(place.place_type))}</span></td>
@@ -7127,6 +7145,20 @@
       const description = document.getElementById("tripDescription").value.trim();
       const startDate = document.getElementById("tripStart").value || null;
       const endDate = document.getElementById("tripEnd").value || null;
+      const startAddress = document.getElementById("tripStartAddress").value.trim();
+      const differentEndAddress = document.getElementById("tripDifferentEndAddress").checked;
+      const typedEndAddress = document.getElementById("tripEndAddress").value.trim();
+      const endAddress = differentEndAddress ? typedEndAddress : startAddress;
+
+      if (!startAddress) {
+        showMessage(message, "Wpisz adres startu.", "error");
+        return;
+      }
+
+      if (differentEndAddress && !typedEndAddress) {
+        showMessage(message, "Wpisz adres końca albo odznacz opcję innego adresu.", "error");
+        return;
+      }
 
       if (startDate && endDate && endDate < startDate) {
         showMessage(message, "Data zakończenia nie może być wcześniejsza od rozpoczęcia.", "error");
@@ -7140,6 +7172,8 @@
         description: description || null,
         start_date: startDate,
         end_date: endDate,
+        start_address: startAddress,
+        end_address: endAddress,
         created_by: currentUser.id
       });
 
@@ -7149,6 +7183,8 @@
       }
 
       event.target.reset();
+      document.getElementById("tripEndAddressWrap").classList.add("hidden");
+      document.getElementById("tripEndAddress").required = false;
       showMessage(message, "Wyjazd został utworzony.", "success");
       await loadAdminTrips();
       fillAssignmentSelects();
@@ -7230,6 +7266,17 @@
       const endDate = prompt("Data zakończenia (RRRR-MM-DD):", trip.end_date || "");
       if (endDate === null) return;
 
+      const startAddress = prompt("Adres startu:", trip.start_address || "");
+      if (startAddress === null) return;
+
+      const differentEndAddress = confirm("Czy adres końca jest inny niż adres startu?");
+      let endAddress = startAddress;
+
+      if (differentEndAddress) {
+        endAddress = prompt("Adres końca:", trip.end_address || "");
+        if (endAddress === null) return;
+      }
+
       if (!title.trim()) {
         alert("Nazwa wyjazdu nie może być pusta.");
         return;
@@ -7240,6 +7287,16 @@
         return;
       }
 
+      if (!startAddress.trim()) {
+        alert("Adres startu nie może być pusty.");
+        return;
+      }
+
+      if (differentEndAddress && !endAddress.trim()) {
+        alert("Adres końca nie może być pusty.");
+        return;
+      }
+
       const { error } = await client
         .from("trips")
         .update({
@@ -7247,6 +7304,8 @@
           description: description.trim() || null,
           start_date: startDate || null,
           end_date: endDate || null,
+          start_address: startAddress.trim(),
+          end_address: differentEndAddress ? endAddress.trim() : startAddress.trim(),
           updated_at: new Date().toISOString()
         })
         .eq("id", tripId);
@@ -7304,7 +7363,30 @@
         });
       }
     })();
-  </script>
+  
+    function setupTripAddressFields() {
+      const checkbox = document.getElementById("tripDifferentEndAddress");
+      const wrapper = document.getElementById("tripEndAddressWrap");
+      const endInput = document.getElementById("tripEndAddress");
+
+      checkbox?.addEventListener("change", () => {
+        const showEndAddress = checkbox.checked;
+        wrapper?.classList.toggle("hidden", !showEndAddress);
+
+        if (endInput) {
+          endInput.required = showEndAddress;
+          if (!showEndAddress) endInput.value = "";
+        }
+      });
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", setupTripAddressFields);
+    } else {
+      setupTripAddressFields();
+    }
+
+</script>
 
 
   <div id="photoLightbox" class="photo-lightbox" aria-hidden="true">
@@ -7330,6 +7412,5 @@
       </button>
     </div>
   </div>
-
 </body>
 </html>
