@@ -1487,6 +1487,164 @@
       overflow-wrap: anywhere;
     }
 
+  
+    .route-map-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .route-summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .route-summary-card {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255,255,255,.04);
+    }
+
+    .route-summary-label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .route-summary-value {
+      margin-top: 5px;
+      color: var(--accent);
+      font-size: 24px;
+      font-weight: 900;
+    }
+
+    .route-list {
+      position: relative;
+      display: grid;
+      gap: 0;
+      margin-top: 18px;
+    }
+
+    .route-stop {
+      position: relative;
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr);
+      gap: 14px;
+      padding-bottom: 24px;
+    }
+
+    .route-stop:last-child {
+      padding-bottom: 0;
+    }
+
+    .route-stop::before {
+      content: "";
+      position: absolute;
+      left: 21px;
+      top: 44px;
+      bottom: 0;
+      width: 2px;
+      background: rgba(245,196,81,.38);
+    }
+
+    .route-stop:last-child::before {
+      display: none;
+    }
+
+    .route-stop-number {
+      position: relative;
+      z-index: 1;
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border: 2px solid var(--accent);
+      border-radius: 50%;
+      color: #17242a;
+      background: var(--accent);
+      font-weight: 900;
+    }
+
+    .route-stop-content {
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: rgba(255,255,255,.04);
+    }
+
+    .route-stop-name {
+      margin-bottom: 5px;
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .route-stop-meta {
+      color: var(--muted);
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    .route-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .overnight-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 9px;
+      border-radius: 999px;
+      color: #fff0b8;
+      background: rgba(245,196,81,.18);
+      border: 1px solid rgba(245,196,81,.45);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .schedule-place-actions {
+      display: inline-flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .schedule-place-overnight {
+      padding: 4px 8px;
+      border: 0;
+      border-radius: 999px;
+      color: #17242a;
+      background: var(--accent);
+      font-size: 11px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .route-empty {
+      min-height: 260px;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      border: 1px dashed var(--line);
+      border-radius: 16px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    @media (max-width: 700px) {
+      .route-summary {
+        grid-template-columns: 1fr;
+      }
+    }
+
   </style>
 </head>
 
@@ -1634,7 +1792,17 @@
         </div>
 
         <div id="trip-tab-mapa" class="trip-tab-content">
-          <div class="card placeholder-panel"><div><h2>Mapa wyjazdu</h2><p class="muted">Tutaj pojawi się mapa z trasą i punktami wyjazdu.</p></div></div>
+          <div class="route-map-toolbar">
+            <div>
+              <h2>Mapa wyjazdu</h2>
+              <p class="muted">
+                Trasa jest tworzona automatycznie z miejsc oznaczonych w Harmonogramie jako nocleg.
+              </p>
+            </div>
+          </div>
+
+          <div id="routeMessage" class="message"></div>
+          <div id="routeMapContainer"></div>
         </div>
 
         <div id="trip-tab-kempingi" class="trip-tab-content">
@@ -2019,6 +2187,7 @@
     let chatRealtimeChannel = null;
     let tripLocations = [];
     let locationScheduleUsage = [];
+    let overnightRouteStops = [];
 
     const authView = document.getElementById("authView");
     const accountView = document.getElementById("accountView");
@@ -2431,6 +2600,10 @@
       if (tabName === "miejsca" && selectedTrip) {
         await loadLocations();
       }
+
+      if (tabName === "mapa" && selectedTrip) {
+        await loadRouteMap();
+      }
     }
 
     document.querySelectorAll(".trip-tab").forEach(button => {
@@ -2549,7 +2722,7 @@
             .order("name", { ascending: true }),
           client
             .from("schedule_day_places")
-            .select("*")
+            .select("id, schedule_day_id, place_id, created_by, created_at, is_overnight")
             .in("schedule_day_id", dayIds),
           client
             .from("trip_locations")
@@ -2898,6 +3071,191 @@
 
 
 
+
+
+
+    async function loadRouteMap() {
+      const message = document.getElementById("routeMessage");
+      const container = document.getElementById("routeMapContainer");
+
+      if (!selectedTrip) return;
+
+      showMessage(message, "Ładowanie trasy...");
+      container.innerHTML = "";
+
+      const [
+        { data: daysData, error: daysError },
+        { data: placesData, error: placesError }
+      ] = await Promise.all([
+        client
+          .from("schedule_days")
+          .select("id, day_date, day_number")
+          .eq("trip_id", selectedTrip.id)
+          .eq("is_active", true)
+          .order("day_date", { ascending: true }),
+        client
+          .from("trip_places")
+          .select("id, name, description, website_url, address, place_type")
+          .eq("trip_id", selectedTrip.id)
+      ]);
+
+      if (daysError) {
+        showMessage(message, daysError.message, "error");
+        return;
+      }
+
+      if (placesError) {
+        showMessage(message, placesError.message, "error");
+        return;
+      }
+
+      const days = daysData || [];
+      const dayIds = days.map(day => day.id);
+      let links = [];
+
+      if (dayIds.length) {
+        const { data, error } = await client
+          .from("schedule_day_places")
+          .select("id, schedule_day_id, place_id, is_overnight")
+          .in("schedule_day_id", dayIds)
+          .eq("is_overnight", true);
+
+        if (error) {
+          showMessage(message, error.message, "error");
+          return;
+        }
+
+        links = data || [];
+      }
+
+      const placesById = new Map((placesData || []).map(place => [place.id, place]));
+
+      overnightRouteStops = days
+        .map(day => {
+          const link = links.find(item => item.schedule_day_id === day.id);
+          const place = link ? placesById.get(link.place_id) : null;
+
+          if (!link || !place) return null;
+
+          return {
+            day,
+            place
+          };
+        })
+        .filter(Boolean);
+
+      showMessage(message, "");
+      renderRouteMap();
+    }
+
+    function buildGoogleMapsRouteUrl() {
+      const usableStops = overnightRouteStops.filter(stop => stop.place.address?.trim());
+
+      if (!usableStops.length) return "";
+
+      if (usableStops.length === 1) {
+        return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(usableStops[0].place.address)}`;
+      }
+
+      const origin = usableStops[0].place.address;
+      const destination = usableStops[usableStops.length - 1].place.address;
+      const waypoints = usableStops
+        .slice(1, -1)
+        .map(stop => stop.place.address)
+        .join("|");
+
+      let url =
+        `https://www.google.com/maps/dir/?api=1`
+        + `&origin=${encodeURIComponent(origin)}`
+        + `&destination=${encodeURIComponent(destination)}`
+        + `&travelmode=driving`;
+
+      if (waypoints) {
+        url += `&waypoints=${encodeURIComponent(waypoints)}`;
+      }
+
+      return url;
+    }
+
+    function renderRouteMap() {
+      const container = document.getElementById("routeMapContainer");
+
+      if (!overnightRouteStops.length) {
+        container.innerHTML = `
+          <div class="route-empty">
+            <div>
+              <h3>Nie wybrano jeszcze noclegów</h3>
+              <p>
+                Wejdź do Harmonogramu, przypisz kemping lub miejsce postoju do dnia,
+                a następnie kliknij „Ustaw jako nocleg”.
+              </p>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const googleMapsUrl = buildGoogleMapsRouteUrl();
+      const daysWithOvernight = overnightRouteStops.length;
+      const firstDate = overnightRouteStops[0]?.day?.day_date;
+      const lastDate = overnightRouteStops[overnightRouteStops.length - 1]?.day?.day_date;
+
+      container.innerHTML = `
+        <div class="route-summary">
+          <div class="route-summary-card">
+            <div class="route-summary-label">Liczba noclegów</div>
+            <div class="route-summary-value">${daysWithOvernight}</div>
+          </div>
+
+          <div class="route-summary-card">
+            <div class="route-summary-label">Pierwszy nocleg</div>
+            <div class="route-summary-value">${firstDate ? formatDate(firstDate) : "—"}</div>
+          </div>
+
+          <div class="route-summary-card">
+            <div class="route-summary-label">Ostatni nocleg</div>
+            <div class="route-summary-value">${lastDate ? formatDate(lastDate) : "—"}</div>
+          </div>
+        </div>
+
+        <div class="route-list">
+          ${overnightRouteStops.map((stop, index) => `
+            <div class="route-stop">
+              <div class="route-stop-number">${index + 1}</div>
+
+              <div class="route-stop-content">
+                <div class="route-stop-name">
+                  ${escapeHtml(stop.place.name)}
+                </div>
+
+                <div class="route-stop-meta">
+                  Dzień ${stop.day.day_number} — ${formatDate(stop.day.day_date)}
+                  <br>
+                  ${escapeHtml(stop.place.address || "Brak adresu — uzupełnij adres, aby utworzyć trasę.")}
+                </div>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+
+        <div class="route-actions">
+          ${googleMapsUrl ? `
+            <a
+              class="button"
+              href="${escapeHtml(googleMapsUrl)}"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Otwórz trasę w Google Maps
+            </a>
+          ` : `
+            <span class="muted">
+              Uzupełnij adresy noclegów, aby wygenerować trasę Google Maps.
+            </span>
+          `}
+        </div>
+      `;
+    }
 
 
     function canCreateLocations() {
@@ -3851,13 +4209,38 @@
               ? assignedPlaces.map(({ link, place }) => `
                   <span class="schedule-place-chip">
                     ${escapeHtml(place.name)}
+
+                    ${link.is_overnight ? `
+                      <span class="overnight-badge">🌙 Nocleg</span>
+                    ` : ""}
+
                     ${canAssignPlaceToDay() ? `
-                      <button
-                        class="schedule-place-remove"
-                        type="button"
-                        title="Usuń z tego dnia"
-                        onclick="removePlaceFromDay('${link.id}')"
-                      >×</button>
+                      <span class="schedule-place-actions">
+                        ${!link.is_overnight ? `
+                          <button
+                            class="schedule-place-overnight"
+                            type="button"
+                            onclick="setPlaceAsOvernight('${day.id}', '${place.id}')"
+                          >
+                            Ustaw jako nocleg
+                          </button>
+                        ` : `
+                          <button
+                            class="schedule-place-overnight"
+                            type="button"
+                            onclick="clearOvernight('${day.id}')"
+                          >
+                            Usuń nocleg
+                          </button>
+                        `}
+
+                        <button
+                          class="schedule-place-remove"
+                          type="button"
+                          title="Usuń z tego dnia"
+                          onclick="removePlaceFromDay('${link.id}')"
+                        >×</button>
+                      </span>
                     ` : ""}
                   </span>
                 `).join("")
@@ -3887,6 +4270,37 @@
           ` : ""}
         </div>
       `;
+    }
+
+    async function setPlaceAsOvernight(scheduleDayId, placeId) {
+      if (!canAssignPlaceToDay()) return;
+
+      const { error } = await client.rpc("set_schedule_day_overnight", {
+        selected_schedule_day_id: scheduleDayId,
+        selected_place_id: placeId
+      });
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      await loadSchedule();
+    }
+
+    async function clearOvernight(scheduleDayId) {
+      if (!canAssignPlaceToDay()) return;
+
+      const { error } = await client.rpc("clear_schedule_day_overnight", {
+        selected_schedule_day_id: scheduleDayId
+      });
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      await loadSchedule();
     }
 
     async function addPlaceToDay(event, scheduleDayId) {
