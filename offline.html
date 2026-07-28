@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b2f39">
+  <title>KamperTeam — brak internetu</title>
+  <style>
+    *{box-sizing:border-box}
+    body{
+      margin:0;min-height:100vh;display:grid;place-items:center;
+      padding:24px;color:#f5fbfc;font-family:Inter,Segoe UI,Arial,sans-serif;
+      background:linear-gradient(145deg,#06171d,#0c3b45 55%,#071d24)
+    }
+    main{
+      width:min(560px,100%);padding:32px;border:1px solid rgba(255,255,255,.16);
+      border-radius:26px;background:rgba(8,32,39,.9);text-align:center
+    }
+    h1{margin:0 0 14px;font-size:34px}
+    p{color:#c8dde1;line-height:1.6}
+    button{
+      margin-top:16px;padding:13px 18px;border:0;border-radius:12px;
+      background:#f5c451;color:#17242a;font-weight:800
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Brak połączenia z internetem</h1>
+    <p>
+      Aplikacja KamperTeam jest uruchomiona, ale dane wyjazdów wymagają
+      połączenia z internetem. Sprawdź zasięg i spróbuj ponownie.
+    </p>
+    <button onclick="location.reload()">Spróbuj ponownie</button>
+  </main>
+</body>
+</html>

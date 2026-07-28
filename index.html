@@ -4,6 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b2f39">
+
+  <meta name="application-name" content="KamperTeam">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="KamperTeam">
+  <meta name="format-detection" content="telephone=no">
+
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png">
   <title>KamperTeam.eu</title>
 
   <style>
@@ -419,6 +430,43 @@
 
       .nav-links { justify-content: flex-start; }
     }
+  
+    body {
+      padding-top: env(safe-area-inset-top);
+      padding-right: env(safe-area-inset-right);
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-left: env(safe-area-inset-left);
+    }
+
+    @media (display-mode: standalone) {
+      body {
+        min-height: 100svh;
+      }
+
+      nav {
+        padding-top: 14px;
+      }
+    }
+
+    .ios-install-note {
+      display: none;
+      margin: 18px 0 0;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      color: var(--muted);
+      background: rgba(255,255,255,.05);
+      line-height: 1.5;
+    }
+
+    .ios-install-note strong {
+      color: var(--accent);
+    }
+
+    .ios-install-note.visible {
+      display: block;
+    }
+
   </style>
 </head>
 
@@ -439,6 +487,12 @@
         <span id="navStatus" class="badge">Gość</span>
       </div>
     </nav>
+
+    <div id="iosInstallNote" class="ios-install-note">
+      <strong>Zainstaluj KamperTeam na iPhonie:</strong>
+      otwórz menu udostępniania w Safari, wybierz „Dodaj do ekranu początkowego”,
+      a następnie włącz „Otwórz jako aplikację”.
+    </div>
 
     <main>
       <section id="page-home" class="page active">
@@ -1394,5 +1448,30 @@
       await renderSession(session?.user ?? null);
     });
   </script>
+
+  <script>
+    (function () {
+      const isIos = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+      const isStandalone =
+        window.matchMedia("(display-mode: standalone)").matches ||
+        window.navigator.standalone === true;
+
+      const installNote = document.getElementById("iosInstallNote");
+      if (installNote && isIos && !isStandalone) {
+        installNote.classList.add("visible");
+      }
+
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", async () => {
+          try {
+            await navigator.serviceWorker.register("/service-worker.js");
+          } catch (error) {
+            console.warn("Nie udało się zarejestrować service workera:", error);
+          }
+        });
+      }
+    })();
+  </script>
+
 </body>
 </html>
