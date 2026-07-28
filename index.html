@@ -868,31 +868,90 @@
       const grid = document.getElementById("adminTripsGrid");
       grid.innerHTML = "";
 
-      const { data, error } = await client
+      const { data: tripsData, error: tripsError } = await client
         .from("trips")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("start_date", { ascending: true, nullsFirst: false });
 
-      if (error) {
-        grid.innerHTML = `<p class="message error">${escapeHtml(error.message)}</p>`;
+      if (tripsError) {
+        grid.innerHTML = `<p class="message error">${escapeHtml(tripsError.message)}</p>`;
         return;
       }
 
-      adminTrips = data || [];
+      adminTrips = tripsData || [];
 
       if (!adminTrips.length) {
         grid.innerHTML = '<p class="muted">Nie ma jeszcze żadnych wyjazdów.</p>';
         return;
       }
 
-      grid.innerHTML = adminTrips.map(trip => `
-        <article class="trip-card">
-          <h3>${escapeHtml(trip.title)}</h3>
-          <div class="trip-meta">${formatDate(trip.start_date)} – ${formatDate(trip.end_date)}</div>
-          <p class="muted">${escapeHtml(trip.description || "Brak opisu.")}</p>
-          <button class="button danger small-button" onclick="deleteTrip('${trip.id}')">Usuń wyjazd</button>
-        </article>
-      `).join("");
+      const [{ data: membersData, error: membersError }, { data: profilesData, error: profilesError }] = await Promise.all([
+        client.from("trip_members").select("trip_id, user_id, role"),
+        client.from("profiles").select("id, first_name, last_name, email")
+      ]);
+
+      if (membersError || profilesError) {
+        const errorText = membersError?.message || profilesError?.message || "Nie udało się pobrać uczestników.";
+        grid.innerHTML = `<p class="message error">${escapeHtml(errorText)}</p>`;
+        return;
+      }
+
+      const profilesById = new Map((profilesData || []).map(profile => [profile.id, profile]));
+      const membersByTrip = new Map();
+
+      (membersData || []).forEach(member => {
+        if (!membersByTrip.has(member.trip_id)) {
+          membersByTrip.set(member.trip_id, { uczestnik: [], gosc: [] });
+        }
+
+        const profile = profilesById.get(member.user_id);
+        const name = profile ? userDisplayName(profile) : "Nieznany użytkownik";
+        membersByTrip.get(member.trip_id)[member.role]?.push(name);
+      });
+
+      grid.innerHTML = `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nazwa</th>
+                <th>Data</th>
+                <th>Opis</th>
+                <th>Uczestnicy</th>
+                <th>Goście</th>
+                <th>Operacje</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${adminTrips.map(trip => {
+                const members = membersByTrip.get(trip.id) || { uczestnik: [], gosc: [] };
+                const participants = members.uczestnik.length
+                  ? members.uczestnik.map(name => `<span class="badge">${escapeHtml(name)}</span>`).join(" ")
+                  : '<span class="muted">Brak</span>';
+                const guests = members.gosc.length
+                  ? members.gosc.map(name => `<span class="badge">${escapeHtml(name)}</span>`).join(" ")
+                  : '<span class="muted">Brak</span>';
+
+                return `
+                  <tr>
+                    <td><strong>${escapeHtml(trip.title)}</strong></td>
+                    <td>${formatDate(trip.start_date)} – ${formatDate(trip.end_date)}</td>
+                    <td>${escapeHtml(trip.description || "Brak opisu.")}</td>
+                    <td><div class="actions">${participants}</div></td>
+                    <td><div class="actions">${guests}</div></td>
+                    <td>
+                      <div class="actions">
+                        <button class="button secondary small-button" onclick="editTrip('${trip.id}')">Edytuj</button>
+                        <button class="button danger small-button" onclick="deleteTrip('${trip.id}')">Usuń</button>
+                      </div>
+                    </td>
+                  </tr>
+                `;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
     }
 
     async function loadAdminUsers() {
@@ -1040,6 +1099,52 @@
       }
 
       alert("Przy następnym logowaniu użytkownik będzie musiał ustawić nowe hasło.");
+    };
+
+    window.editTrip = async function(tripId) {
+      const trip = adminTrips.find(item => item.id === tripId);
+      if (!trip) return;
+
+      const title = prompt("Nazwa wyjazdu:", trip.title);
+      if (title === null) return;
+
+      const description = prompt("Opis wyjazdu:", trip.description || "");
+      if (description === null) return;
+
+      const startDate = prompt("Data rozpoczęcia (RRRR-MM-DD):", trip.start_date || "");
+      if (startDate === null) return;
+
+      const endDate = prompt("Data zakończenia (RRRR-MM-DD):", trip.end_date || "");
+      if (endDate === null) return;
+
+      if (!title.trim()) {
+        alert("Nazwa wyjazdu nie może być pusta.");
+        return;
+      }
+
+      if (startDate && endDate && endDate < startDate) {
+        alert("Data zakończenia nie może być wcześniejsza od daty rozpoczęcia.");
+        return;
+      }
+
+      const { error } = await client
+        .from("trips")
+        .update({
+          title: title.trim(),
+          description: description.trim() || null,
+          start_date: startDate || null,
+          end_date: endDate || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", tripId);
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      await loadAdminTrips();
+      fillAssignmentSelects();
     };
 
     window.deleteTrip = async function(tripId) {
