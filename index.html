@@ -1473,6 +1473,20 @@
       }
     }
 
+  
+    .location-planned {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      min-width: 140px;
+    }
+
+    .location-link {
+      color: var(--accent);
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
   </style>
 </head>
 
@@ -1712,6 +1726,16 @@
                 name="address"
                 placeholder="Ulica, kod, miejscowość"
               ></textarea>
+            </div>
+
+            <div>
+              <label for="locationWebsite">Link</label>
+              <input
+                id="locationWebsite"
+                name="website_url"
+                type="url"
+                placeholder="https://..."
+              >
             </div>
 
             <div class="location-form-actions">
@@ -1994,6 +2018,7 @@
     let chatProfiles = [];
     let chatRealtimeChannel = null;
     let tripLocations = [];
+    let locationScheduleUsage = [];
 
     const authView = document.getElementById("authView");
     const accountView = document.getElementById("accountView");
@@ -2902,20 +2927,68 @@
         form.classList.remove("hidden");
       }
 
-      const { data, error } = await client
-        .from("trip_locations")
-        .select("*")
-        .eq("trip_id", selectedTrip.id)
-        .order("created_at", { ascending: true });
+      const [
+        { data: locationsData, error: locationsError },
+        { data: daysData, error: daysError }
+      ] = await Promise.all([
+        client
+          .from("trip_locations")
+          .select("*")
+          .eq("trip_id", selectedTrip.id)
+          .order("created_at", { ascending: true }),
+        client
+          .from("schedule_days")
+          .select("id, day_date, day_number")
+          .eq("trip_id", selectedTrip.id)
+          .eq("is_active", true)
+          .order("day_date", { ascending: true })
+      ]);
 
-      if (error) {
-        showMessage(message, error.message, "error");
+      if (locationsError) {
+        showMessage(message, locationsError.message, "error");
         return;
       }
 
-      tripLocations = data || [];
+      if (daysError) {
+        showMessage(message, daysError.message, "error");
+        return;
+      }
+
+      tripLocations = locationsData || [];
+      scheduleDays = daysData || [];
+
+      const dayIds = scheduleDays.map(day => day.id);
+      let scheduleItemsData = [];
+
+      if (dayIds.length) {
+        const { data, error } = await client
+          .from("schedule_items")
+          .select("id, schedule_day_id, location_id")
+          .in("schedule_day_id", dayIds)
+          .not("location_id", "is", null);
+
+        if (error) {
+          showMessage(message, error.message, "error");
+          return;
+        }
+
+        scheduleItemsData = data || [];
+      }
+
+      locationScheduleUsage = scheduleItemsData;
       showMessage(message, "");
       renderLocations();
+    }
+
+    function locationPlannedDates(locationId) {
+      const dayIds = locationScheduleUsage
+        .filter(item => item.location_id === locationId)
+        .map(item => item.schedule_day_id);
+
+      return scheduleDays
+        .filter(day => dayIds.includes(day.id))
+        .sort((a, b) => a.day_date.localeCompare(b.day_date))
+        .map(day => day.day_date);
     }
 
     function renderLocations() {
@@ -2939,42 +3012,71 @@
                 <th>Nazwa</th>
                 <th>Opis</th>
                 <th>Adres</th>
+                <th>Link</th>
+                <th>Zaplanowano</th>
                 <th>Operacje</th>
               </tr>
             </thead>
             <tbody>
-              ${tripLocations.map((location, index) => `
-                <tr>
-                  <td class="location-lp">${index + 1}</td>
-                  <td><strong>${escapeHtml(location.name)}</strong></td>
-                  <td class="location-description">
-                    ${escapeHtml(location.description || "Brak opisu")}
-                  </td>
-                  <td class="location-address">
-                    ${escapeHtml(location.address || "Brak adresu")}
-                  </td>
-                  <td>
-                    <div class="actions">
-                      ${canEditLocation(location) ? `
-                        <button
-                          class="button secondary small-button"
-                          type="button"
-                          onclick="editLocation('${location.id}')"
+              ${tripLocations.map((location, index) => {
+                const plannedDates = locationPlannedDates(location.id);
+                const website = normalizeWebsiteUrl(location.website_url);
+
+                return `
+                  <tr>
+                    <td class="location-lp">${index + 1}</td>
+                    <td><strong>${escapeHtml(location.name)}</strong></td>
+                    <td class="location-description">
+                      ${escapeHtml(location.description || "Brak opisu")}
+                    </td>
+                    <td class="location-address">
+                      ${escapeHtml(location.address || "Brak adresu")}
+                    </td>
+                    <td>
+                      ${website ? `
+                        <a
+                          class="location-link"
+                          href="${escapeHtml(website)}"
+                          target="_blank"
+                          rel="noopener noreferrer"
                         >
-                          Edytuj
-                        </button>
-                        <button
-                          class="button danger small-button"
-                          type="button"
-                          onclick="deleteLocation('${location.id}')"
-                        >
-                          Usuń
-                        </button>
-                      ` : ""}
-                    </div>
-                  </td>
-                </tr>
-              `).join("")}
+                          Otwórz link
+                        </a>
+                      ` : '<span class="muted">Brak</span>'}
+                    </td>
+                    <td>
+                      <div class="location-planned">
+                        ${plannedDates.length
+                          ? plannedDates.map(date => `
+                              <span class="planned-badge">${formatDate(date)}</span>
+                            `).join("")
+                          : '<span class="muted">Nie</span>'
+                        }
+                      </div>
+                    </td>
+                    <td>
+                      <div class="actions">
+                        ${canEditLocation(location) ? `
+                          <button
+                            class="button secondary small-button"
+                            type="button"
+                            onclick="editLocation('${location.id}')"
+                          >
+                            Edytuj
+                          </button>
+                          <button
+                            class="button danger small-button"
+                            type="button"
+                            onclick="deleteLocation('${location.id}')"
+                          >
+                            Usuń
+                          </button>
+                        ` : ""}
+                      </div>
+                    </td>
+                  </tr>
+                `;
+              }).join("")}
             </tbody>
           </table>
         </div>
@@ -3002,6 +3104,7 @@
           name: values.name.trim(),
           description: values.description.trim() || null,
           address: values.address.trim() || null,
+          website_url: values.website_url.trim() || null,
           created_by: currentUser.id
         });
 
@@ -3029,12 +3132,16 @@
       const address = prompt("Adres:", location.address || "");
       if (address === null) return;
 
+      const websiteUrl = prompt("Link:", location.website_url || "");
+      if (websiteUrl === null) return;
+
       const { error } = await client
         .from("trip_locations")
         .update({
           name: name.trim(),
           description: description.trim() || null,
           address: address.trim() || null,
+          website_url: websiteUrl.trim() || null,
           updated_at: new Date().toISOString()
         })
         .eq("id", locationId);
