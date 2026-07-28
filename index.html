@@ -2480,6 +2480,131 @@
       }
     }
 
+  
+    .route-distance-summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+
+    .route-distance-card {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255,255,255,.04);
+    }
+
+    .route-distance-label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .route-distance-value {
+      margin-top: 5px;
+      color: var(--accent);
+      font-size: 25px;
+      font-weight: 900;
+    }
+
+    #tripRouteMap {
+      width: min(100%, 850px);
+      aspect-ratio: 1 / .72;
+      min-height: 430px;
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      background: rgba(255,255,255,.04);
+    }
+
+    .route-segments {
+      width: min(100%, 850px);
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .route-segment {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.035);
+    }
+
+    .route-segment-number {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: #17242a;
+      background: var(--accent);
+      font-weight: 900;
+    }
+
+    .route-segment-title {
+      font-weight: 900;
+      line-height: 1.4;
+    }
+
+    .route-segment-address {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .route-segment-result {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .route-segment-km {
+      color: var(--accent);
+      font-size: 17px;
+      font-weight: 900;
+    }
+
+    .route-segment-time {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .route-distance-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    @media (max-width: 700px) {
+      .route-distance-summary {
+        grid-template-columns: 1fr;
+      }
+
+      #tripRouteMap {
+        width: 100%;
+        min-height: 340px;
+        aspect-ratio: 1 / 1;
+      }
+
+      .route-segment {
+        grid-template-columns: 38px minmax(0, 1fr);
+      }
+
+      .route-segment-result {
+        grid-column: 2;
+        text-align: left;
+      }
+    }
+
   </style>
 </head>
 
@@ -2711,15 +2836,48 @@
           </div>
 
           <div id="map-panel-route" class="map-inner-panel">
-            <div class="map-repair-panel">
-              <div>
-                <div class="map-repair-icon">🚧</div>
-                <h2>Trasa wyjazdu jest w remoncie</h2>
-                <p class="muted">
-                  Tutaj później dopracujemy kolejność przejazdu i odległości.
-                </p>
+            <div>
+              <h3>Odległości i trasa wyjazdu</h3>
+              <p class="muted">
+                Trasa jest liczona od adresu startu, przez noclegi przypisane do kolejnych dni,
+                do adresu końcowego.
+              </p>
+            </div>
+
+            <div id="routeDistanceMessage" class="message"></div>
+
+            <div id="routeDistanceSummary" class="route-distance-summary hidden">
+              <div class="route-distance-card">
+                <div class="route-distance-label">Łączna odległość</div>
+                <div id="routeTotalDistance" class="route-distance-value">—</div>
+              </div>
+              <div class="route-distance-card">
+                <div class="route-distance-label">Szacowany czas jazdy</div>
+                <div id="routeTotalDuration" class="route-distance-value">—</div>
+              </div>
+              <div class="route-distance-card">
+                <div class="route-distance-label">Liczba odcinków</div>
+                <div id="routeLegsCount" class="route-distance-value">—</div>
               </div>
             </div>
+
+            <div class="route-distance-actions">
+              <button id="recalculateRouteButton" class="button" type="button">
+                Przelicz odległości
+              </button>
+              <a id="openCalculatedRouteButton" class="button secondary hidden"
+                 target="_blank" rel="noopener noreferrer">
+                Otwórz trasę w Google Maps
+              </a>
+            </div>
+
+            <div id="tripRouteMap">
+              <div class="map-loading-placeholder">
+                Kliknij „Przelicz odległości”, aby utworzyć trasę.
+              </div>
+            </div>
+
+            <div id="routeSegments" class="route-segments"></div>
           </div>
         </div>
 
@@ -3295,6 +3453,11 @@
     let googleMapsLoaderPromise = null;
     let normalMapHost = null;
     let currentMapBounds = null;
+    let calculatedRoute = null;
+    let calculatedRoutePolylines = [];
+    let calculatedRouteMarkers = [];
+    let tripRouteGoogleMap = null;
+    let routeStopsCache = [];
 
     const authView = document.getElementById("authView");
     const accountView = document.getElementById("accountView");
@@ -4657,7 +4820,7 @@
 
 
 
-    function setupMapInnerTabs() {
+    function setupPinsTableTabs() {
       document.querySelectorAll(".map-inner-tab").forEach(button => {
         button.addEventListener("click", async () => {
           const panelName = button.dataset.mapPanel;
@@ -4731,9 +4894,9 @@
     }
 
     if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", setupMapInnerTabs);
+      document.addEventListener("DOMContentLoaded", setupPinsTableTabs);
     } else {
-      setupMapInnerTabs();
+      setupPinsTableTabs();
     }
 
     async function loadRouteMap() {
@@ -4974,6 +5137,10 @@
           if (panelName === "points") {
             await loadPlacesMap();
           }
+
+          if (panelName === "route") {
+            await loadCalculatedRoute();
+          }
         });
       });
 
@@ -4984,6 +5151,7 @@
 
       document.getElementById("expandTripMapButton")?.addEventListener("click", expandTripMap);
       document.getElementById("closeExpandedMapButton")?.addEventListener("click", closeExpandedTripMap);
+      document.getElementById("recalculateRouteButton")?.addEventListener("click", loadCalculatedRoute);
     }
 
     function expandTripMap() {
@@ -5228,6 +5396,342 @@
       document.addEventListener("DOMContentLoaded", setupMapInnerTabs);
     } else {
       setupMapInnerTabs();
+    }
+
+
+
+    function formatRouteDuration(milliseconds) {
+      const totalMinutes = Math.max(0, Math.round(Number(milliseconds || 0) / 60000));
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+
+      if (!hours) return `${minutes} min`;
+      if (!minutes) return `${hours} godz.`;
+      return `${hours} godz. ${minutes} min`;
+    }
+
+    function formatRouteDistance(meters) {
+      return `${(Number(meters || 0) / 1000).toLocaleString("pl-PL", {
+        maximumFractionDigits: 0
+      })} km`;
+    }
+
+    async function collectRouteStops() {
+      const startAddress = String(selectedTrip?.start_address || "").trim();
+      const endAddress = String(
+        selectedTrip?.end_address || selectedTrip?.start_address || ""
+      ).trim();
+
+      if (!startAddress) {
+        throw new Error("Najpierw uzupełnij adres startu wyjazdu w Panelu administratora.");
+      }
+
+      if (!endAddress) {
+        throw new Error("Najpierw uzupełnij adres końcowy wyjazdu w Panelu administratora.");
+      }
+
+      const [
+        { data: daysData, error: daysError },
+        { data: placesData, error: placesError }
+      ] = await Promise.all([
+        client
+          .from("schedule_days")
+          .select("id, day_date, day_number")
+          .eq("trip_id", selectedTrip.id)
+          .eq("is_active", true)
+          .order("day_date", { ascending: true }),
+        client
+          .from("trip_places")
+          .select("id, name, address")
+          .eq("trip_id", selectedTrip.id)
+      ]);
+
+      if (daysError || placesError) {
+        throw daysError || placesError;
+      }
+
+      const days = daysData || [];
+      const dayIds = days.map(day => day.id);
+      let overnightLinks = [];
+
+      if (dayIds.length) {
+        const { data, error } = await client
+          .from("schedule_day_places")
+          .select("schedule_day_id, place_id, is_overnight")
+          .in("schedule_day_id", dayIds)
+          .eq("is_overnight", true);
+
+        if (error) throw error;
+        overnightLinks = data || [];
+      }
+
+      const placesById = new Map((placesData || []).map(place => [place.id, place]));
+
+      const overnightStops = days
+        .map(day => {
+          const link = overnightLinks.find(item => item.schedule_day_id === day.id);
+          const place = link ? placesById.get(link.place_id) : null;
+
+          if (!place?.address?.trim()) return null;
+
+          return {
+            type: "overnight",
+            name: `Nocleg — dzień ${day.day_number}: ${place.name}`,
+            address: place.address.trim(),
+            dayNumber: day.day_number,
+            dayDate: day.day_date
+          };
+        })
+        .filter(Boolean);
+
+      const stops = [
+        {
+          type: "start",
+          name: "Start",
+          address: startAddress
+        },
+        ...overnightStops,
+        {
+          type: "end",
+          name: "Koniec",
+          address: endAddress
+        }
+      ];
+
+      const compactStops = stops.filter((stop, index) => {
+        if (index === 0) return true;
+        return stop.address.toLowerCase() !== stops[index - 1].address.toLowerCase();
+      });
+
+      if (compactStops.length < 2) {
+        throw new Error("Brakuje co najmniej dwóch różnych adresów potrzebnych do obliczenia trasy.");
+      }
+
+      return compactStops;
+    }
+
+    function buildCalculatedGoogleMapsUrl(stops) {
+      if (!stops?.length) return "";
+
+      if (stops.length === 1) {
+        return googleMapsAddressUrl(stops[0].address);
+      }
+
+      const origin = stops[0].address;
+      const destination = stops[stops.length - 1].address;
+      const waypoints = stops.slice(1, -1).map(stop => stop.address).join("|");
+
+      let url =
+        "https://www.google.com/maps/dir/?api=1"
+        + `&origin=${encodeURIComponent(origin)}`
+        + `&destination=${encodeURIComponent(destination)}`
+        + "&travelmode=driving";
+
+      if (waypoints) {
+        url += `&waypoints=${encodeURIComponent(waypoints)}`;
+      }
+
+      return url;
+    }
+
+    function clearCalculatedRouteMap() {
+      calculatedRoutePolylines.forEach(polyline => polyline.setMap?.(null));
+      calculatedRouteMarkers.forEach(marker => marker.setMap?.(null));
+
+      calculatedRoutePolylines = [];
+      calculatedRouteMarkers = [];
+      calculatedRoute = null;
+    }
+
+    async function loadCalculatedRoute() {
+      const message = document.getElementById("routeDistanceMessage");
+      const summary = document.getElementById("routeDistanceSummary");
+      const segments = document.getElementById("routeSegments");
+      const mapCanvas = document.getElementById("tripRouteMap");
+      const openButton = document.getElementById("openCalculatedRouteButton");
+      const recalculateButton = document.getElementById("recalculateRouteButton");
+
+      if (!selectedTrip || !message || !summary || !segments || !mapCanvas) return;
+
+      recalculateButton.disabled = true;
+      summary.classList.add("hidden");
+      openButton.classList.add("hidden");
+      segments.innerHTML = "";
+      showMessage(message, "Google Maps oblicza odległości...");
+
+      try {
+        await loadGoogleMapsLibrary();
+
+        const stops = await collectRouteStops();
+        routeStopsCache = stops;
+
+        const { Route } = await google.maps.importLibrary("routes");
+
+        const request = {
+          origin: stops[0].address,
+          destination: stops[stops.length - 1].address,
+          intermediates: stops.slice(1, -1).map(stop => ({
+            location: stop.address
+          })),
+          travelMode: "DRIVING",
+          routingPreference: "TRAFFIC_UNAWARE",
+          fields: [
+            "path",
+            "distanceMeters",
+            "durationMillis",
+            "legs"
+          ]
+        };
+
+        const { routes } = await Route.computeRoutes(request);
+        const route = routes?.[0];
+
+        if (!route) {
+          throw new Error("Google Maps nie znalazło trasy dla zapisanych adresów.");
+        }
+
+        clearCalculatedRouteMap();
+        calculatedRoute = route;
+
+        mapCanvas.innerHTML = "";
+        tripRouteGoogleMap = new google.maps.Map(mapCanvas, {
+          center: { lat: 52.05, lng: 19.15 },
+          zoom: 6,
+          mapTypeControl: true,
+          streetViewControl: false,
+          fullscreenControl: true,
+          zoomControl: true,
+          gestureHandling: "greedy"
+        });
+
+        calculatedRoutePolylines = route.createPolylines({
+          strokeColor: "#f5c451",
+          strokeOpacity: 0.95,
+          strokeWeight: 6
+        });
+
+        calculatedRoutePolylines.forEach(polyline => {
+          polyline.setMap(tripRouteGoogleMap);
+        });
+
+        const bounds = new google.maps.LatLngBounds();
+        (route.path || []).forEach(point => bounds.extend(point));
+
+        for (let index = 0; index < stops.length; index += 1) {
+          const geocoder = new google.maps.Geocoder();
+          try {
+            const response = await geocoder.geocode({ address: stops[index].address });
+            const position = response.results?.[0]?.geometry?.location;
+            if (!position) continue;
+
+            bounds.extend(position);
+
+            const label =
+              index === 0
+                ? "A"
+                : index === stops.length - 1
+                  ? "B"
+                  : String(index);
+
+            const marker = new google.maps.Marker({
+              map: tripRouteGoogleMap,
+              position,
+              title: stops[index].name,
+              label
+            });
+
+            calculatedRouteMarkers.push(marker);
+          } catch (error) {
+            console.warn("Nie udało się dodać punktu trasy:", stops[index].address, error);
+          }
+        }
+
+        if (!bounds.isEmpty()) {
+          tripRouteGoogleMap.fitBounds(bounds, 70);
+        }
+
+        const totalDistanceMeters = Number(route.distanceMeters || 0);
+        const totalDurationMillis = Number(route.durationMillis || 0);
+        const legs = route.legs || [];
+
+        document.getElementById("routeTotalDistance").textContent =
+          formatRouteDistance(totalDistanceMeters);
+        document.getElementById("routeTotalDuration").textContent =
+          formatRouteDuration(totalDurationMillis);
+        document.getElementById("routeLegsCount").textContent =
+          String(legs.length);
+
+        summary.classList.remove("hidden");
+
+        segments.innerHTML = legs.map((leg, index) => {
+          const from = stops[index];
+          const to = stops[index + 1];
+
+          return `
+            <div class="route-segment">
+              <div class="route-segment-number">${index + 1}</div>
+              <div>
+                <div class="route-segment-title">
+                  ${escapeHtml(from?.name || "Punkt")} → ${escapeHtml(to?.name || "Punkt")}
+                </div>
+                <div class="route-segment-address">
+                  ${escapeHtml(from?.address || "")}<br>
+                  ${escapeHtml(to?.address || "")}
+                </div>
+              </div>
+              <div class="route-segment-result">
+                <div class="route-segment-km">${formatRouteDistance(leg.distanceMeters)}</div>
+                <div class="route-segment-time">${formatRouteDuration(leg.durationMillis)}</div>
+              </div>
+            </div>
+          `;
+        }).join("");
+
+        const googleMapsUrl = buildCalculatedGoogleMapsUrl(stops);
+        if (googleMapsUrl) {
+          openButton.href = googleMapsUrl;
+          openButton.classList.remove("hidden");
+        }
+
+        const roundedKilometers = Math.round(totalDistanceMeters / 1000);
+        selectedTrip.estimated_km = roundedKilometers;
+
+        if (currentProfile?.global_role === "administrator") {
+          const { error: saveError } = await client
+            .from("trips")
+            .update({
+              estimated_km: roundedKilometers,
+              updated_at: new Date().toISOString()
+            })
+            .eq("id", selectedTrip.id);
+
+          if (saveError) {
+            console.warn("Nie udało się zapisać kilometrów na pulpicie:", saveError);
+          }
+        }
+
+        showMessage(
+          message,
+          currentProfile?.global_role === "administrator"
+            ? "Odległości zostały obliczone, a łączna liczba kilometrów zapisana na Pulpicie."
+            : "Odległości zostały obliczone.",
+          "success"
+        );
+      } catch (error) {
+        console.error(error);
+        mapCanvas.innerHTML = `
+          <div class="map-loading-placeholder">
+            Nie udało się obliczyć trasy.
+          </div>
+        `;
+        showMessage(
+          message,
+          error.message || "Nie udało się obliczyć odległości.",
+          "error"
+        );
+      } finally {
+        recalculateButton.disabled = false;
+      }
     }
 
 
