@@ -285,9 +285,25 @@
     }
 
     .table-wrap {
+      width: 100%;
       overflow-x: auto;
       border: 1px solid var(--line);
       border-radius: 14px;
+    }
+
+    .admin-trips-table {
+      width: 100%;
+      display: block;
+    }
+
+    .admin-trips-table .table-wrap {
+      width: 100%;
+    }
+
+    .admin-trips-table table {
+      width: 100%;
+      min-width: 1050px;
+      table-layout: auto;
     }
 
     table {
@@ -531,7 +547,7 @@
 
           <div class="card">
             <h2>Utworzone wyjazdy</h2>
-            <div id="adminTripsGrid" class="grid"></div>
+            <div id="adminTripsGrid" class="admin-trips-table"></div>
           </div>
         </div>
       </section>
