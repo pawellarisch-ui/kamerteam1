@@ -2327,8 +2327,9 @@
     }
 
     #tripPlacesMap {
-      width: 100%;
-      height: 330px;
+      width: min(100%, 720px);
+      aspect-ratio: 1 / 1;
+      height: auto;
       border: 1px solid var(--line);
       border-radius: 18px;
       overflow: hidden;
@@ -2389,7 +2390,9 @@
 
     @media (max-width: 700px) {
       #tripPlacesMap {
-        height: 280px;
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        height: auto;
       }
     }
 
@@ -2462,6 +2465,68 @@
 
     body.map-expanded-open {
       overflow: hidden;
+    }
+
+  
+    #map-panel-points {
+      max-width: 760px;
+    }
+
+    .map-source-legend {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 10px 0 14px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .map-source-legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .map-source-dot {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 1px rgba(0,0,0,.25);
+    }
+
+    .map-source-dot.camping {
+      background: #f5c451;
+    }
+
+    .map-source-dot.location {
+      background: #2f9ed5;
+    }
+
+    .custom-map-pin {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border: 2px solid #fff;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      box-shadow: 0 2px 7px rgba(0,0,0,.35);
+    }
+
+    .custom-map-pin > span {
+      transform: rotate(45deg);
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .custom-map-pin.camping {
+      background: #f5c451;
+    }
+
+    .custom-map-pin.location {
+      background: #2f9ed5;
     }
 
   </style>
@@ -2679,6 +2744,11 @@
               <span id="campingPointsCount" class="map-point-badge">Kempingi i postoje: 0</span>
               <span id="locationPointsCount" class="map-point-badge">Miejsca: 0</span>
               <span id="visiblePinsCount" class="map-point-badge">Pinezki na mapie: 0</span>
+            </div>
+
+            <div class="map-source-legend">
+              <span><i class="map-source-dot camping"></i>Kempingi i postoje</span>
+              <span><i class="map-source-dot location"></i>Miejsca</span>
             </div>
 
             <div id="mapGeocodeStatus" class="map-geocode-status"></div>
@@ -4510,6 +4580,19 @@
       }
     }
 
+    function createTripMapIcon(source) {
+      const markerClass = source === "camping" ? "camping" : "location";
+      const symbol = source === "camping" ? "🚐" : "★";
+
+      return L.divIcon({
+        className: "",
+        html: `<div class="custom-map-pin ${markerClass}"><span>${symbol}</span></div>`,
+        iconSize: [30, 30],
+        iconAnchor: [15, 28],
+        popupAnchor: [0, -26]
+      });
+    }
+
     async function loadPlacesMap() {
       const message = document.getElementById("mapPointsMessage");
       const status = document.getElementById("mapGeocodeStatus");
@@ -4575,6 +4658,8 @@
         status.textContent = `Ustalanie położenia punktów: 0 z ${points.length}...`;
 
         let visiblePins = 0;
+        let visibleCampingPins = 0;
+        let visibleLocationPins = 0;
 
         for (let index = 0; index < points.length; index += 1) {
           const point = points[index];
@@ -4583,7 +4668,10 @@
           const coordinates = await geocodeMapAddress(point.address);
           if (!coordinates) continue;
 
-          const marker = L.marker([coordinates.lat, coordinates.lon]).addTo(tripLeafletMap);
+          const marker = L.marker(
+            [coordinates.lat, coordinates.lon],
+            { icon: createTripMapIcon(point.source) }
+          ).addTo(tripLeafletMap);
           const sourceLabel =
             point.source === "camping"
               ? "Kemping / miejsce postoju"
@@ -4605,12 +4693,29 @@
           tripMapMarkers.push(marker);
           currentMapBounds.push([coordinates.lat, coordinates.lon]);
           visiblePins += 1;
+
+          if (point.source === "camping") {
+            visibleCampingPins += 1;
+          } else {
+            visibleLocationPins += 1;
+          }
         }
 
         pinsCounter.textContent = `Pinezki na mapie: ${visiblePins}`;
-        status.textContent = visiblePins
-          ? `Wyświetlono ${visiblePins} punktów. Mapa pozostaje na widoku całej Polski.`
-          : "Nie udało się odnaleźć adresów na mapie. Sprawdź ich pisownię.";
+
+        if (visiblePins) {
+          const missingPins = points.length - visiblePins;
+
+          status.textContent =
+            `Wyświetlono: ${visibleCampingPins} kempingów/postojów i `
+            + `${visibleLocationPins} miejsc.`
+            + (missingPins
+              ? ` Nie odnaleziono ${missingPins} adresów — sprawdź ich pisownię.`
+              : " Mapa pozostaje na widoku całej Polski.");
+        } else {
+          status.textContent =
+            "Nie udało się odnaleźć adresów na mapie. Sprawdź ich pisownię.";
+        }
 
         setTimeout(() => tripLeafletMap?.invalidateSize(), 80);
       } catch (error) {
