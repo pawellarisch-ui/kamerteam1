@@ -997,6 +997,191 @@
       }
     }
 
+  
+    .places-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .place-form {
+      display: grid;
+      grid-template-columns: minmax(190px, 1fr) minmax(260px, 1.6fr) minmax(210px, 1fr) minmax(210px, 1fr) 150px;
+      gap: 12px;
+      align-items: end;
+      padding: 18px;
+      margin-bottom: 18px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255,255,255,.03);
+    }
+
+    .place-form-actions {
+      grid-column: 1 / -1;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .places-table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+    }
+
+    .places-table {
+      width: 100%;
+      min-width: 1180px;
+      border-collapse: collapse;
+    }
+
+    .places-table th,
+    .places-table td {
+      padding: 13px 12px;
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .places-table th {
+      color: var(--accent);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .places-table tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .place-lp {
+      width: 52px;
+      text-align: center !important;
+      font-weight: 900;
+    }
+
+    .place-description,
+    .place-address {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      line-height: 1.45;
+    }
+
+    .place-type {
+      display: inline-flex;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.07);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .place-planned {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      min-width: 140px;
+    }
+
+    .planned-badge {
+      display: inline-flex;
+      padding: 5px 8px;
+      border-radius: 999px;
+      color: #b9f5ca;
+      background: rgba(34,160,82,.22);
+      border: 1px solid rgba(93,220,133,.42);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .place-link {
+      color: var(--accent);
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .schedule-places-box {
+      margin-top: 18px;
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.03);
+    }
+
+    .schedule-places-title {
+      margin: 0 0 10px;
+      font-size: 17px;
+    }
+
+    .schedule-place-picker {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) auto;
+      gap: 10px;
+      align-items: end;
+      margin-top: 12px;
+    }
+
+    .schedule-place-list {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .schedule-place-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 10px;
+      border: 1px solid rgba(93,220,133,.42);
+      border-radius: 999px;
+      color: #b9f5ca;
+      background: rgba(34,160,82,.18);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .schedule-place-remove {
+      width: 22px;
+      height: 22px;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      color: #fff;
+      background: rgba(255,255,255,.15);
+      cursor: pointer;
+    }
+
+    .places-empty {
+      padding: 32px 18px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    @media (max-width: 1000px) {
+      .place-form {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .place-form,
+      .schedule-place-picker {
+        grid-template-columns: 1fr;
+      }
+
+      .place-form-actions {
+        grid-column: auto;
+      }
+    }
+
   </style>
 </head>
 
@@ -1148,7 +1333,55 @@
         </div>
 
         <div id="trip-tab-kempingi" class="trip-tab-content">
-          <div class="card placeholder-panel"><div><h2>Kempingi i miejsca postoju</h2><p class="muted">Tutaj będą kempingi, camperparki, parkingi i postoje.</p></div></div>
+          <div class="places-toolbar">
+            <div>
+              <h2>Kempingi i miejsca postoju</h2>
+              <p class="muted">
+                Dodane miejsca można następnie przypisać do wybranego dnia Harmonogramu.
+              </p>
+            </div>
+          </div>
+
+          <form id="placeForm" class="place-form hidden">
+            <div>
+              <label for="placeName">Nazwa</label>
+              <input id="placeName" name="name" required placeholder="np. Camping Billund">
+            </div>
+
+            <div>
+              <label for="placeDescription">Opis</label>
+              <textarea id="placeDescription" name="description" placeholder="Najważniejsze informacje"></textarea>
+            </div>
+
+            <div>
+              <label for="placeWebsite">Link</label>
+              <input id="placeWebsite" name="website_url" type="url" placeholder="https://...">
+            </div>
+
+            <div>
+              <label for="placeAddress">Adres</label>
+              <textarea id="placeAddress" name="address" placeholder="Ulica, kod, miejscowość"></textarea>
+            </div>
+
+            <div>
+              <label for="placeType">Typ</label>
+              <select id="placeType" name="place_type">
+                <option value="kemping">Kemping</option>
+                <option value="camperpark">Camperpark</option>
+                <option value="parking">Parking</option>
+                <option value="dziki_postoj">Dziki postój</option>
+                <option value="hotel">Hotel</option>
+                <option value="inne">Inne</option>
+              </select>
+            </div>
+
+            <div class="place-form-actions">
+              <button class="button" type="submit">+ Dodaj miejsce</button>
+            </div>
+          </form>
+
+          <div id="placesMessage" class="message"></div>
+          <div id="placesContainer"></div>
         </div>
 
         <div id="trip-tab-restauracje" class="trip-tab-content">
@@ -1381,6 +1614,8 @@
     let photoObjectUrls = [];
     let tripTasks = [];
     let taskAssignableUsers = [];
+    let tripPlaces = [];
+    let scheduleDayPlaces = [];
 
     const authView = document.getElementById("authView");
     const accountView = document.getElementById("accountView");
@@ -1781,6 +2016,10 @@
       if (tabName === "zadania" && selectedTrip) {
         await loadTasks();
       }
+
+      if (tabName === "kempingi" && selectedTrip) {
+        await loadPlaces();
+      }
     }
 
     document.querySelectorAll(".trip-tab").forEach(button => {
@@ -1885,6 +2124,33 @@
       }
 
       scheduleItems = itemsData;
+
+      const [{ data: placesData, error: placesError }, { data: linksData, error: linksError }] =
+        await Promise.all([
+          client
+            .from("trip_places")
+            .select("*")
+            .eq("trip_id", selectedTrip.id)
+            .order("name", { ascending: true }),
+          client
+            .from("schedule_day_places")
+            .select("*")
+            .in("schedule_day_id", dayIds)
+        ]);
+
+      if (placesError) {
+        showMessage(message, placesError.message, "error");
+        return;
+      }
+
+      if (linksError) {
+        showMessage(message, linksError.message, "error");
+        return;
+      }
+
+      tripPlaces = placesData || [];
+      scheduleDayPlaces = linksData || [];
+
       showMessage(message, "");
       renderSchedule();
     }
@@ -1912,6 +2178,7 @@
 
             <div class="schedule-day-body">
               ${renderDayFields(day)}
+              ${renderSchedulePlaces(day)}
 
               <h3>Plan godzina po godzinie</h3>
 
@@ -2159,6 +2426,412 @@
       await loadSchedule();
     }
 
+
+
+
+    function canCreatePlaces() {
+      return currentProfile?.global_role === "administrator"
+        || selectedTripRole === "uczestnik";
+    }
+
+    function canEditPlace(place) {
+      return currentProfile?.global_role === "administrator"
+        || place.created_by === currentUser?.id;
+    }
+
+    function canAssignPlaceToDay() {
+      return currentProfile?.global_role === "administrator"
+        || selectedTripRole === "uczestnik";
+    }
+
+    function placeTypeLabel(type) {
+      const labels = {
+        kemping: "Kemping",
+        camperpark: "Camperpark",
+        parking: "Parking",
+        dziki_postoj: "Dziki postój",
+        hotel: "Hotel",
+        inne: "Inne"
+      };
+      return labels[type] || type;
+    }
+
+    function normalizeWebsiteUrl(url) {
+      const value = String(url || "").trim();
+      if (!value) return "";
+      if (/^https?:\/\//i.test(value)) return value;
+      return `https://${value}`;
+    }
+
+    function placePlannedDates(placeId) {
+      const dayIds = scheduleDayPlaces
+        .filter(link => link.place_id === placeId)
+        .map(link => link.schedule_day_id);
+
+      return scheduleDays
+        .filter(day => dayIds.includes(day.id))
+        .sort((a, b) => a.day_date.localeCompare(b.day_date))
+        .map(day => day.day_date);
+    }
+
+    async function loadPlaces() {
+      const message = document.getElementById("placesMessage");
+      const container = document.getElementById("placesContainer");
+      const form = document.getElementById("placeForm");
+
+      if (!selectedTrip) return;
+
+      showMessage(message, "Ładowanie miejsc...");
+      container.innerHTML = "";
+      form.classList.add("hidden");
+
+      await resolveSelectedTripRole();
+
+      if (canCreatePlaces()) {
+        form.classList.remove("hidden");
+      }
+
+      const { data: placesData, error: placesError } = await client
+        .from("trip_places")
+        .select("*")
+        .eq("trip_id", selectedTrip.id)
+        .order("created_at", { ascending: true });
+
+      if (placesError) {
+        showMessage(message, placesError.message, "error");
+        return;
+      }
+
+      const { data: daysData, error: daysError } = await client
+        .from("schedule_days")
+        .select("id, day_date, day_number")
+        .eq("trip_id", selectedTrip.id)
+        .eq("is_active", true)
+        .order("day_date", { ascending: true });
+
+      if (daysError) {
+        showMessage(message, daysError.message, "error");
+        return;
+      }
+
+      const dayIds = (daysData || []).map(day => day.id);
+      let linksData = [];
+
+      if (dayIds.length) {
+        const { data, error } = await client
+          .from("schedule_day_places")
+          .select("*")
+          .in("schedule_day_id", dayIds);
+
+        if (error) {
+          showMessage(message, error.message, "error");
+          return;
+        }
+
+        linksData = data || [];
+      }
+
+      tripPlaces = placesData || [];
+      scheduleDays = daysData || [];
+      scheduleDayPlaces = linksData;
+
+      showMessage(message, "");
+      renderPlaces();
+    }
+
+    function renderPlaces() {
+      const container = document.getElementById("placesContainer");
+
+      if (!tripPlaces.length) {
+        container.innerHTML = `
+          <div class="places-empty">
+            Nie dodano jeszcze żadnych kempingów ani miejsc postoju.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="places-table-wrap">
+          <table class="places-table">
+            <thead>
+              <tr>
+                <th class="place-lp">LP</th>
+                <th>Nazwa</th>
+                <th>Opis</th>
+                <th>Link</th>
+                <th>Adres</th>
+                <th>Typ</th>
+                <th>Zaplanowano</th>
+                <th>Operacje</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tripPlaces.map((place, index) => renderPlaceRow(place, index)).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderPlaceRow(place, index) {
+      const plannedDates = placePlannedDates(place.id);
+      const website = normalizeWebsiteUrl(place.website_url);
+
+      return `
+        <tr>
+          <td class="place-lp">${index + 1}</td>
+          <td><strong>${escapeHtml(place.name)}</strong></td>
+          <td class="place-description">${escapeHtml(place.description || "Brak opisu")}</td>
+          <td>
+            ${website ? `
+              <a class="place-link" href="${escapeHtml(website)}" target="_blank" rel="noopener noreferrer">
+                Otwórz link
+              </a>
+            ` : '<span class="muted">Brak</span>'}
+          </td>
+          <td class="place-address">${escapeHtml(place.address || "Brak adresu")}</td>
+          <td><span class="place-type">${escapeHtml(placeTypeLabel(place.place_type))}</span></td>
+          <td>
+            <div class="place-planned">
+              ${plannedDates.length
+                ? plannedDates.map(date => `<span class="planned-badge">${formatDate(date)}</span>`).join("")
+                : '<span class="muted">Nie</span>'
+              }
+            </div>
+          </td>
+          <td>
+            <div class="actions">
+              ${canEditPlace(place) ? `
+                <button class="button secondary small-button" type="button"
+                  onclick="editPlace('${place.id}')">Edytuj</button>
+                <button class="button danger small-button" type="button"
+                  onclick="deletePlace('${place.id}')">Usuń</button>
+              ` : ""}
+            </div>
+          </td>
+        </tr>
+      `;
+    }
+
+    async function addPlace(event) {
+      event.preventDefault();
+
+      if (!canCreatePlaces()) {
+        alert("Nie masz uprawnień do dodawania miejsc.");
+        return;
+      }
+
+      const form = event.currentTarget;
+      const button = form.querySelector('button[type="submit"]');
+      const values = Object.fromEntries(new FormData(form).entries());
+
+      button.disabled = true;
+
+      const { error } = await client
+        .from("trip_places")
+        .insert({
+          trip_id: selectedTrip.id,
+          name: values.name.trim(),
+          description: values.description.trim() || null,
+          website_url: values.website_url.trim() || null,
+          address: values.address.trim() || null,
+          place_type: values.place_type,
+          created_by: currentUser.id
+        });
+
+      button.disabled = false;
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      form.reset();
+      await loadPlaces();
+    }
+
+    async function editPlace(placeId) {
+      const place = tripPlaces.find(item => item.id === placeId);
+      if (!place || !canEditPlace(place)) return;
+
+      const name = prompt("Nazwa miejsca:", place.name);
+      if (name === null || !name.trim()) return;
+
+      const description = prompt("Opis:", place.description || "");
+      if (description === null) return;
+
+      const websiteUrl = prompt("Link:", place.website_url || "");
+      if (websiteUrl === null) return;
+
+      const address = prompt("Adres:", place.address || "");
+      if (address === null) return;
+
+      const type = prompt(
+        "Typ: kemping, camperpark, parking, dziki_postoj, hotel albo inne",
+        place.place_type
+      );
+      if (type === null) return;
+
+      const normalizedType = type.trim().toLowerCase();
+      if (!["kemping", "camperpark", "parking", "dziki_postoj", "hotel", "inne"].includes(normalizedType)) {
+        alert("Nieprawidłowy typ miejsca.");
+        return;
+      }
+
+      const { error } = await client
+        .from("trip_places")
+        .update({
+          name: name.trim(),
+          description: description.trim() || null,
+          website_url: websiteUrl.trim() || null,
+          address: address.trim() || null,
+          place_type: normalizedType,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", placeId);
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      await loadPlaces();
+    }
+
+    async function deletePlace(placeId) {
+      const place = tripPlaces.find(item => item.id === placeId);
+      if (!place || !canEditPlace(place)) return;
+
+      if (!confirm(
+        "Czy na pewno usunąć to miejsce? Zostanie również usunięte z dni harmonogramu."
+      )) return;
+
+      const { error } = await client
+        .from("trip_places")
+        .delete()
+        .eq("id", placeId);
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      await loadPlaces();
+    }
+
+    function renderSchedulePlaces(day) {
+      const links = scheduleDayPlaces.filter(link => link.schedule_day_id === day.id);
+      const assignedPlaces = links
+        .map(link => ({
+          link,
+          place: tripPlaces.find(place => place.id === link.place_id)
+        }))
+        .filter(item => item.place);
+
+      const assignedIds = new Set(assignedPlaces.map(item => item.place.id));
+      const available = tripPlaces.filter(place => !assignedIds.has(place.id));
+
+      return `
+        <div class="schedule-places-box">
+          <h3 class="schedule-places-title">Kemping / miejsce postoju</h3>
+
+          <div class="schedule-place-list">
+            ${assignedPlaces.length
+              ? assignedPlaces.map(({ link, place }) => `
+                  <span class="schedule-place-chip">
+                    ${escapeHtml(place.name)}
+                    ${canAssignPlaceToDay() ? `
+                      <button
+                        class="schedule-place-remove"
+                        type="button"
+                        title="Usuń z tego dnia"
+                        onclick="removePlaceFromDay('${link.id}')"
+                      >×</button>
+                    ` : ""}
+                  </span>
+                `).join("")
+              : '<span class="muted">Nie przypisano miejsca do tego dnia.</span>'
+            }
+          </div>
+
+          ${canAssignPlaceToDay() && available.length ? `
+            <form class="schedule-place-picker" onsubmit="addPlaceToDay(event, '${day.id}')">
+              <div>
+                <label>Dodaj miejsce z zakładki Kempingi i postoje</label>
+                <select name="place_id" required>
+                  <option value="">Wybierz miejsce</option>
+                  ${available.map(place => `
+                    <option value="${place.id}">
+                      ${escapeHtml(place.name)} — ${escapeHtml(placeTypeLabel(place.place_type))}
+                    </option>
+                  `).join("")}
+                </select>
+              </div>
+              <button class="button" type="submit">Dodaj do dnia</button>
+            </form>
+          ` : canAssignPlaceToDay() && !tripPlaces.length ? `
+            <p class="muted">
+              Najpierw dodaj miejsce w zakładce „Kempingi i postoje”.
+            </p>
+          ` : ""}
+        </div>
+      `;
+    }
+
+    async function addPlaceToDay(event, scheduleDayId) {
+      event.preventDefault();
+
+      if (!canAssignPlaceToDay()) return;
+
+      const form = event.currentTarget;
+      const placeId = new FormData(form).get("place_id");
+
+      if (!placeId) return;
+
+      const { error } = await client
+        .from("schedule_day_places")
+        .insert({
+          schedule_day_id: scheduleDayId,
+          place_id: placeId,
+          created_by: currentUser.id
+        });
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      await loadSchedule();
+    }
+
+    async function removePlaceFromDay(linkId) {
+      if (!canAssignPlaceToDay()) return;
+
+      if (!confirm("Usunąć to miejsce z wybranego dnia?")) return;
+
+      const { error } = await client
+        .from("schedule_day_places")
+        .delete()
+        .eq("id", linkId);
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      await loadSchedule();
+    }
+
+    function setupPlaceControls() {
+      document.getElementById("placeForm")?.addEventListener("submit", addPlace);
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", setupPlaceControls);
+    } else {
+      setupPlaceControls();
+    }
 
 
     function canCreateTasks() {
