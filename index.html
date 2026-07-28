@@ -3420,7 +3420,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
-    const GOOGLE_MAPS_API_KEY = "AIzaSyAp-Hhab8dZEColqVJiiQMReAv1NHl8HfY";
+    const GOOGLE_MAPS_API_KEY = "AIzaSyCdd-LwgDKT5ZqBuQfvXOLmZkGpSSWWTtM";
     const SUPABASE_URL = "https://xzorbvkwfeaypuweptec.supabase.co";
     const SUPABASE_KEY = "sb_publishable_iBl7YOQZ14XNHF5vflZhdA_6l5U6-Uo";
     const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -3617,7 +3617,6 @@
       }
 
       document.body.classList.add("is-active-session");
-      setTimeout(() => openCurrentTripAsHome(), 0);
       accountTitle.textContent = `Witaj, ${userDisplayName(currentProfile)}`;
       accountText.textContent = isAdmin
         ? "Masz pełny dostęp administracyjny do portalu."
@@ -3656,6 +3655,7 @@
 
           if (data.session) {
             await renderSession(data.user);
+            await openCurrentTripAsHome();
           } else {
             showMessage(
               authMessage,
@@ -3668,6 +3668,7 @@
           if (error) throw error;
           authForm.reset();
           await renderSession(data.user);
+          await openCurrentTripAsHome();
         }
       } catch (error) {
         showMessage(authMessage, error.message || "Wystąpił błąd.", "error");
@@ -8358,12 +8359,54 @@
       fillAssignmentSelects();
     };
 
+    let initialSessionLoaded = false;
+
     client.auth.getSession().then(async ({ data }) => {
-      await renderSession(data.session?.user ?? null);
+      const user = data.session?.user ?? null;
+
+      await renderSession(user);
+
+      if (user && currentProfile?.status === "active") {
+        await openCurrentTripAsHome();
+      }
+
+      initialSessionLoaded = true;
     });
 
-    client.auth.onAuthStateChange(async (_event, session) => {
-      await renderSession(session?.user ?? null);
+    client.auth.onAuthStateChange(async (event, session) => {
+      const user = session?.user ?? null;
+
+      if (event === "SIGNED_OUT") {
+        initialSessionLoaded = true;
+        await renderSession(null);
+        return;
+      }
+
+      if (!initialSessionLoaded) {
+        return;
+      }
+
+      if (event === "SIGNED_IN") {
+        const isDifferentUser = currentUser?.id !== user?.id;
+        const sessionWasNotRendered = !currentProfile;
+
+        if (isDifferentUser || sessionWasNotRendered) {
+          await renderSession(user);
+
+          if (user && currentProfile?.status === "active") {
+            await openCurrentTripAsHome();
+          }
+        }
+
+        return;
+      }
+
+      if (event === "USER_UPDATED") {
+        await renderSession(user);
+      }
+
+      // TOKEN_REFRESHED, INITIAL_SESSION i powrót do karty przeglądarki
+      // nie zmieniają aktualnie otwartej strony ani zakładki wyjazdu.
     });
   </script>
 
