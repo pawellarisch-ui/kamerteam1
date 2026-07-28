@@ -2570,6 +2570,33 @@
       display: none;
     }
 
+  
+    .schedule-route-point {
+      margin: 0 0 12px;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: rgba(245,196,81,.08);
+    }
+
+    .schedule-route-point.end {
+      margin: 12px 0 0;
+    }
+
+    .schedule-route-point-label {
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .schedule-route-point-address {
+      margin-top: 5px;
+      font-weight: 900;
+      overflow-wrap: anywhere;
+    }
+
   </style>
 </head>
 
@@ -3619,7 +3646,7 @@
 
       const { data: tripsData, error: tripsError } = await client
         .from("trips")
-        .select("id, title, description, start_date, end_date, created_at, is_current, estimated_km")
+        .select("id, title, description, start_date, end_date, created_at, is_current, estimated_km, start_address, end_address")
         .order("start_date", { ascending: true, nullsFirst: false });
 
       if (tripsError) {
@@ -3670,6 +3697,7 @@
                 <th>Nazwa</th>
                 <th>Data</th>
                 <th>Opis</th>
+                <th>Adres startu</th>
                 <th>Uczestnicy</th>
                 <th>Goście</th>
                 <th>Otwórz</th>
@@ -3690,6 +3718,7 @@
                     <td><strong>${escapeHtml(trip.title)}</strong></td>
                     <td>${formatDate(trip.start_date)} – ${formatDate(trip.end_date)}</td>
                     <td>${escapeHtml(trip.description || "Brak opisu.")}</td>
+                    <td>${escapeHtml(trip.start_address || "Brak adresu startu")}</td>
                     <td><div class="actions">${participants}</div></td>
                     <td><div class="actions">${guests}</div></td>
                     <td>
@@ -3918,7 +3947,25 @@
     function renderSchedule() {
       const list = document.getElementById("scheduleList");
 
-      list.innerHTML = scheduleDays.map((day, index) => {
+      const startPoint = selectedTrip?.start_address
+        ? `
+          <div class="schedule-route-point">
+            <div class="schedule-route-point-label">START</div>
+            <div class="schedule-route-point-address">${escapeHtml(selectedTrip.start_address)}</div>
+          </div>
+        `
+        : "";
+
+      const endPoint = selectedTrip?.end_address
+        ? `
+          <div class="schedule-route-point end">
+            <div class="schedule-route-point-label">KONIEC</div>
+            <div class="schedule-route-point-address">${escapeHtml(selectedTrip.end_address)}</div>
+          </div>
+        `
+        : "";
+
+      list.innerHTML = startPoint + scheduleDays.map((day, index) => {
         const items = scheduleItems.filter(item => item.schedule_day_id === day.id);
         const routeText = [day.route_from, day.route_to].filter(Boolean).join(" → ") || "Trasa nieuzupełniona";
         const planText = day.daily_plan || "Brak planu dnia";
@@ -3955,7 +4002,7 @@
             </div>
           </details>
         `;
-      }).join("");
+      }).join("") + endPoint;
     }
 
     function renderDayFields(day) {
@@ -6676,7 +6723,7 @@
 
       const { data, error } = await client
         .from("trips")
-        .select("id, title, description, start_date, end_date, created_at, is_current, estimated_km")
+        .select("id, title, description, start_date, end_date, created_at, is_current, estimated_km, start_address, end_address")
         .eq("is_current", true)
         .maybeSingle();
 
