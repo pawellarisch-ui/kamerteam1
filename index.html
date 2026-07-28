@@ -2607,6 +2607,24 @@
       letter-spacing: .04em;
     }
 
+  
+    .admin-trip-route-cell {
+      min-width: 150px;
+      max-width: 230px;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+
+    .admin-trip-route-label {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
   </style>
 </head>
 
@@ -7095,6 +7113,8 @@
                 <th>Nazwa</th>
                 <th>Data</th>
                 <th>Opis</th>
+                <th>Start</th>
+                <th>Meta</th>
                 <th>Uczestnicy</th>
                 <th>Goście</th>
                 <th>Aktualny</th>
@@ -7116,6 +7136,14 @@
                     <td><strong>${escapeHtml(trip.title)}</strong></td>
                     <td>${formatDate(trip.start_date)} – ${formatDate(trip.end_date)}</td>
                     <td>${escapeHtml(trip.description || "Brak opisu.")}</td>
+                    <td class="admin-trip-route-cell">
+                      <span class="admin-trip-route-label">Start</span>
+                      <span>${escapeHtml(trip.start_address || "Brak adresu")}</span>
+                    </td>
+                    <td class="admin-trip-route-cell">
+                      <span class="admin-trip-route-label">Meta</span>
+                      <span>${escapeHtml(trip.end_address || trip.start_address || "Brak adresu")}</span>
+                    </td>
                     <td><div class="actions">${participants}</div></td>
                     <td><div class="actions">${guests}</div></td>
                     <td>
