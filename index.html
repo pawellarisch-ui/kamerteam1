@@ -1377,6 +1377,102 @@
       }
     }
 
+  
+    .locations-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .location-form {
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) minmax(260px, 1.6fr) minmax(240px, 1.2fr);
+      gap: 12px;
+      align-items: end;
+      padding: 18px;
+      margin-bottom: 18px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255,255,255,.03);
+    }
+
+    .location-form-actions {
+      grid-column: 1 / -1;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .locations-table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+    }
+
+    .locations-table {
+      width: 100%;
+      min-width: 880px;
+      border-collapse: collapse;
+    }
+
+    .locations-table th,
+    .locations-table td {
+      padding: 13px 12px;
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .locations-table th {
+      color: var(--accent);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .locations-table tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .location-lp {
+      width: 52px;
+      text-align: center !important;
+      font-weight: 900;
+    }
+
+    .location-description,
+    .location-address {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      line-height: 1.45;
+    }
+
+    .locations-empty {
+      padding: 32px 18px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .timeline-location {
+      margin-top: 5px;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    @media (max-width: 760px) {
+      .location-form {
+        grid-template-columns: 1fr;
+      }
+
+      .location-form-actions {
+        grid-column: auto;
+      }
+    }
+
   </style>
 </head>
 
@@ -1495,7 +1591,7 @@
           <button class="trip-tab" data-trip-tab="harmonogram">Harmonogram</button>
           <button class="trip-tab" data-trip-tab="mapa">Mapa wyjazdu</button>
           <button class="trip-tab" data-trip-tab="kempingi">Kempingi i postoje</button>
-          <button class="trip-tab" data-trip-tab="restauracje">Restauracje</button>
+          <button class="trip-tab" data-trip-tab="miejsca">Miejsca</button>
           <button class="trip-tab" data-trip-tab="zadania">Lista zadań</button>
           <button class="trip-tab" data-trip-tab="zdjecia">Zdjęcia</button>
           <button class="trip-tab" data-trip-tab="czat">Czat</button>
@@ -1579,8 +1675,52 @@
           <div id="placesContainer"></div>
         </div>
 
-        <div id="trip-tab-restauracje" class="trip-tab-content">
-          <div class="card placeholder-panel"><div><h2>Restauracje</h2><p class="muted">Tutaj pojawią się restauracje przypisane do wyjazdu.</p></div></div>
+        <div id="trip-tab-miejsca" class="trip-tab-content">
+          <div class="locations-toolbar">
+            <div>
+              <h2>Miejsca</h2>
+              <p class="muted">
+                Dodane miejsca można przypisać do punktów godzinowych w Harmonogramie.
+              </p>
+            </div>
+          </div>
+
+          <form id="locationForm" class="location-form hidden">
+            <div>
+              <label for="locationName">Nazwa</label>
+              <input
+                id="locationName"
+                name="name"
+                required
+                placeholder="np. Legoland Billund"
+              >
+            </div>
+
+            <div>
+              <label for="locationDescription">Opis</label>
+              <textarea
+                id="locationDescription"
+                name="description"
+                placeholder="Najważniejsze informacje o miejscu"
+              ></textarea>
+            </div>
+
+            <div>
+              <label for="locationAddress">Adres</label>
+              <textarea
+                id="locationAddress"
+                name="address"
+                placeholder="Ulica, kod, miejscowość"
+              ></textarea>
+            </div>
+
+            <div class="location-form-actions">
+              <button class="button" type="submit">+ Dodaj miejsce</button>
+            </div>
+          </form>
+
+          <div id="locationsMessage" class="message"></div>
+          <div id="locationsContainer"></div>
         </div>
 
         <div id="trip-tab-zadania" class="trip-tab-content">
@@ -1853,6 +1993,7 @@
     let chatMessages = [];
     let chatProfiles = [];
     let chatRealtimeChannel = null;
+    let tripLocations = [];
 
     const authView = document.getElementById("authView");
     const accountView = document.getElementById("accountView");
@@ -2261,6 +2402,10 @@
       if (tabName === "czat" && selectedTrip) {
         await loadChat();
       }
+
+      if (tabName === "miejsca" && selectedTrip) {
+        await loadLocations();
+      }
     }
 
     document.querySelectorAll(".trip-tab").forEach(button => {
@@ -2366,7 +2511,11 @@
 
       scheduleItems = itemsData;
 
-      const [{ data: placesData, error: placesError }, { data: linksData, error: linksError }] =
+      const [
+        { data: placesData, error: placesError },
+        { data: linksData, error: linksError },
+        { data: locationsData, error: locationsError }
+      ] =
         await Promise.all([
           client
             .from("trip_places")
@@ -2376,7 +2525,12 @@
           client
             .from("schedule_day_places")
             .select("*")
-            .in("schedule_day_id", dayIds)
+            .in("schedule_day_id", dayIds),
+          client
+            .from("trip_locations")
+            .select("*")
+            .eq("trip_id", selectedTrip.id)
+            .order("name", { ascending: true })
         ]);
 
       if (placesError) {
@@ -2389,8 +2543,14 @@
         return;
       }
 
+      if (locationsError) {
+        showMessage(message, locationsError.message, "error");
+        return;
+      }
+
       tripPlaces = placesData || [];
       scheduleDayPlaces = linksData || [];
+      tripLocations = locationsData || [];
 
       showMessage(message, "");
       renderSchedule();
@@ -2497,15 +2657,22 @@
     }
 
     function renderScheduleItem(item) {
-      const place = item.location ? `Miejsce: ${item.location}` : "";
+      const linkedLocation = tripLocations.find(location => location.id === item.location_id);
+      const freeTextPlace = item.location ? `Miejsce: ${item.location}` : "";
       const description = item.description || "";
-      const meta = [place, description].filter(Boolean).join("\n");
+      const meta = [freeTextPlace, description].filter(Boolean).join("\n");
 
       return `
         <div class="timeline-item">
           <div class="timeline-time">${escapeHtml(displayTime(item.item_time))}</div>
           <div>
             <div class="timeline-title">${escapeHtml(item.title)}</div>
+            ${linkedLocation ? `
+              <div class="timeline-location">
+                ${escapeHtml(linkedLocation.name)}
+                ${linkedLocation.address ? ` — ${escapeHtml(linkedLocation.address)}` : ""}
+              </div>
+            ` : ""}
             <div class="timeline-meta">${escapeHtml(meta || "Brak dodatkowego opisu")}</div>
           </div>
           ${canModifyScheduleItem(item) ? `
@@ -2529,11 +2696,22 @@
           </div>
           <div>
             <label>Co robimy</label>
-            <input name="title" required placeholder="np. Wyjazd na trasę rowerową">
+            <input name="title" required placeholder="np. Zwiedzanie Legolandu">
           </div>
           <div>
-            <label>Miejsce</label>
-            <input name="location" placeholder="np. Tulln">
+            <label>Miejsce z listy</label>
+            <select name="location_id">
+              <option value="">Bez przypisanego miejsca</option>
+              ${tripLocations.map(location => `
+                <option value="${location.id}">
+                  ${escapeHtml(location.name)}
+                </option>
+              `).join("")}
+            </select>
+          </div>
+          <div>
+            <label>Dodatkowe miejsce tekstowe</label>
+            <input name="location" placeholder="np. wejście główne">
           </div>
           <div class="wide">
             <label>Opis</label>
@@ -2598,6 +2776,7 @@
           schedule_day_id: dayId,
           item_time: values.item_time || null,
           title: values.title.trim(),
+          location_id: values.location_id || null,
           location: values.location.trim() || null,
           description: values.description.trim() || null,
           created_by: currentUser.id
@@ -2623,7 +2802,30 @@
       const newTitle = prompt("Co robimy?", item.title);
       if (newTitle === null || !newTitle.trim()) return;
 
-      const newLocation = prompt("Miejsce:", item.location || "");
+      const currentLinkedLocation = tripLocations.find(location => location.id === item.location_id);
+      const locationList = tripLocations.length
+        ? tripLocations.map((location, index) => `${index + 1}. ${location.name}`).join("\n")
+        : "Brak miejsc na liście.";
+
+      const selectedLocationNumber = prompt(
+        `Wybierz numer miejsca z listy albo pozostaw puste:\n${locationList}`,
+        currentLinkedLocation
+          ? String(tripLocations.findIndex(location => location.id === currentLinkedLocation.id) + 1)
+          : ""
+      );
+      if (selectedLocationNumber === null) return;
+
+      let selectedLocationId = null;
+      if (selectedLocationNumber.trim()) {
+        const selectedIndex = Number(selectedLocationNumber.trim()) - 1;
+        if (!Number.isInteger(selectedIndex) || !tripLocations[selectedIndex]) {
+          alert("Nieprawidłowy numer miejsca.");
+          return;
+        }
+        selectedLocationId = tripLocations[selectedIndex].id;
+      }
+
+      const newLocation = prompt("Dodatkowe miejsce tekstowe:", item.location || "");
       if (newLocation === null) return;
 
       const newDescription = prompt("Opis:", item.description || "");
@@ -2634,6 +2836,7 @@
         .update({
           item_time: newTime.trim() || null,
           title: newTitle.trim(),
+          location_id: selectedLocationId,
           location: newLocation.trim() || null,
           description: newDescription.trim() || null,
           updated_at: new Date().toISOString()
@@ -2669,6 +2872,211 @@
 
 
 
+
+
+
+    function canCreateLocations() {
+      return currentProfile?.global_role === "administrator"
+        || selectedTripRole === "uczestnik";
+    }
+
+    function canEditLocation(location) {
+      return currentProfile?.global_role === "administrator"
+        || location.created_by === currentUser?.id;
+    }
+
+    async function loadLocations() {
+      const message = document.getElementById("locationsMessage");
+      const container = document.getElementById("locationsContainer");
+      const form = document.getElementById("locationForm");
+
+      if (!selectedTrip) return;
+
+      showMessage(message, "Ładowanie miejsc...");
+      container.innerHTML = "";
+      form.classList.add("hidden");
+
+      await resolveSelectedTripRole();
+
+      if (canCreateLocations()) {
+        form.classList.remove("hidden");
+      }
+
+      const { data, error } = await client
+        .from("trip_locations")
+        .select("*")
+        .eq("trip_id", selectedTrip.id)
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        showMessage(message, error.message, "error");
+        return;
+      }
+
+      tripLocations = data || [];
+      showMessage(message, "");
+      renderLocations();
+    }
+
+    function renderLocations() {
+      const container = document.getElementById("locationsContainer");
+
+      if (!tripLocations.length) {
+        container.innerHTML = `
+          <div class="locations-empty">
+            Nie dodano jeszcze żadnych miejsc.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="locations-table-wrap">
+          <table class="locations-table">
+            <thead>
+              <tr>
+                <th class="location-lp">LP</th>
+                <th>Nazwa</th>
+                <th>Opis</th>
+                <th>Adres</th>
+                <th>Operacje</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tripLocations.map((location, index) => `
+                <tr>
+                  <td class="location-lp">${index + 1}</td>
+                  <td><strong>${escapeHtml(location.name)}</strong></td>
+                  <td class="location-description">
+                    ${escapeHtml(location.description || "Brak opisu")}
+                  </td>
+                  <td class="location-address">
+                    ${escapeHtml(location.address || "Brak adresu")}
+                  </td>
+                  <td>
+                    <div class="actions">
+                      ${canEditLocation(location) ? `
+                        <button
+                          class="button secondary small-button"
+                          type="button"
+                          onclick="editLocation('${location.id}')"
+                        >
+                          Edytuj
+                        </button>
+                        <button
+                          class="button danger small-button"
+                          type="button"
+                          onclick="deleteLocation('${location.id}')"
+                        >
+                          Usuń
+                        </button>
+                      ` : ""}
+                    </div>
+                  </td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    async function addLocation(event) {
+      event.preventDefault();
+
+      if (!canCreateLocations()) {
+        alert("Nie masz uprawnień do dodawania miejsc.");
+        return;
+      }
+
+      const form = event.currentTarget;
+      const button = form.querySelector('button[type="submit"]');
+      const values = Object.fromEntries(new FormData(form).entries());
+
+      button.disabled = true;
+
+      const { error } = await client
+        .from("trip_locations")
+        .insert({
+          trip_id: selectedTrip.id,
+          name: values.name.trim(),
+          description: values.description.trim() || null,
+          address: values.address.trim() || null,
+          created_by: currentUser.id
+        });
+
+      button.disabled = false;
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      form.reset();
+      await loadLocations();
+    }
+
+    async function editLocation(locationId) {
+      const location = tripLocations.find(item => item.id === locationId);
+      if (!location || !canEditLocation(location)) return;
+
+      const name = prompt("Nazwa miejsca:", location.name);
+      if (name === null || !name.trim()) return;
+
+      const description = prompt("Opis:", location.description || "");
+      if (description === null) return;
+
+      const address = prompt("Adres:", location.address || "");
+      if (address === null) return;
+
+      const { error } = await client
+        .from("trip_locations")
+        .update({
+          name: name.trim(),
+          description: description.trim() || null,
+          address: address.trim() || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", locationId);
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      await loadLocations();
+    }
+
+    async function deleteLocation(locationId) {
+      const location = tripLocations.find(item => item.id === locationId);
+      if (!location || !canEditLocation(location)) return;
+
+      if (!confirm(
+        "Czy na pewno usunąć to miejsce? Punkty harmonogramu pozostaną, ale miejsce zostanie od nich odłączone."
+      )) return;
+
+      const { error } = await client
+        .from("trip_locations")
+        .delete()
+        .eq("id", locationId);
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      await loadLocations();
+    }
+
+    function setupLocationControls() {
+      document.getElementById("locationForm")?.addEventListener("submit", addLocation);
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", setupLocationControls);
+    } else {
+      setupLocationControls();
+    }
 
 
     function canWriteChat() {
