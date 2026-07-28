@@ -2597,6 +2597,16 @@
       overflow-wrap: anywhere;
     }
 
+  
+    .admin-trips-table td strong {
+      display: inline-block;
+      margin-bottom: 4px;
+      color: var(--accent);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
   </style>
 </head>
 
@@ -3697,7 +3707,8 @@
                 <th>Nazwa</th>
                 <th>Data</th>
                 <th>Opis</th>
-                <th>Adres startu</th>
+                <th>Start</th>
+                <th>Meta</th>
                 <th>Uczestnicy</th>
                 <th>Goście</th>
                 <th>Otwórz</th>
@@ -3718,7 +3729,14 @@
                     <td><strong>${escapeHtml(trip.title)}</strong></td>
                     <td>${formatDate(trip.start_date)} – ${formatDate(trip.end_date)}</td>
                     <td>${escapeHtml(trip.description || "Brak opisu.")}</td>
-                    <td>${escapeHtml(trip.start_address || "Brak adresu startu")}</td>
+                    <td>
+                      <strong>START</strong><br>
+                      ${escapeHtml(trip.start_address || "Brak adresu")}
+                    </td>
+                    <td>
+                      <strong>META</strong><br>
+                      ${escapeHtml(trip.end_address || trip.start_address || "Brak adresu")}
+                    </td>
                     <td><div class="actions">${participants}</div></td>
                     <td><div class="actions">${guests}</div></td>
                     <td>
