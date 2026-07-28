@@ -2293,6 +2293,7 @@
     }
 
   
+
     .map-inner-tabs {
       display: flex;
       gap: 8px;
@@ -2326,16 +2327,6 @@
       display: block;
     }
 
-    #tripPlacesMap {
-      width: min(100%, 720px);
-      aspect-ratio: 1 / 1;
-      height: auto;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      overflow: hidden;
-      background: rgba(255,255,255,.04);
-    }
-
     .map-points-summary {
       display: flex;
       gap: 8px;
@@ -2361,42 +2352,6 @@
       line-height: 1.5;
     }
 
-    .map-repair-panel {
-      min-height: 420px;
-      display: grid;
-      place-items: center;
-      padding: 30px;
-      border: 1px dashed var(--line);
-      border-radius: 18px;
-      text-align: center;
-      background: rgba(255,255,255,.025);
-    }
-
-    .map-repair-icon {
-      margin-bottom: 12px;
-      font-size: 54px;
-    }
-
-    .leaflet-popup-content-wrapper,
-    .leaflet-popup-tip {
-      background: #0b2f39;
-      color: #f5fbfc;
-    }
-
-    .leaflet-popup-content a {
-      color: #f5c451;
-      font-weight: 800;
-    }
-
-    @media (max-width: 700px) {
-      #tripPlacesMap {
-        width: 100%;
-        aspect-ratio: 1 / 1;
-        height: auto;
-      }
-    }
-
-  
     .map-preview-toolbar {
       display: flex;
       justify-content: space-between;
@@ -2426,6 +2381,16 @@
       border-color: var(--accent);
     }
 
+    #tripPlacesMap {
+      width: min(100%, 850px);
+      aspect-ratio: 1 / .72;
+      min-height: 430px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      background: rgba(255,255,255,.04);
+    }
+
     .map-loading-placeholder {
       min-height: 100%;
       display: grid;
@@ -2441,12 +2406,12 @@
       z-index: 10000;
       display: none;
       padding: 18px;
-      background: rgba(3, 14, 18, .94);
+      background: rgba(3,14,18,.94);
     }
 
     .map-expanded-overlay.visible {
       display: grid;
-      grid-template-rows: auto minmax(0, 1fr);
+      grid-template-rows: auto minmax(0,1fr);
       gap: 12px;
     }
 
@@ -2458,8 +2423,10 @@
     }
 
     .map-expanded-overlay #tripPlacesMap {
+      width: 100%;
       height: 100%;
       min-height: 0;
+      aspect-ratio: auto;
       border-radius: 16px;
     }
 
@@ -2467,329 +2434,49 @@
       overflow: hidden;
     }
 
-  
-    #map-panel-points {
-      max-width: 760px;
-    }
-
-    .map-source-legend {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin: 10px 0 14px;
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 800;
-    }
-
-    .map-source-legend span {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-    }
-
-    .map-source-dot {
-      width: 13px;
-      height: 13px;
-      border-radius: 50%;
-      border: 2px solid #fff;
-      box-shadow: 0 0 0 1px rgba(0,0,0,.25);
-    }
-
-    .map-source-dot.camping {
-      background: #f5c451;
-    }
-
-    .map-source-dot.location {
-      background: #2f9ed5;
-    }
-
-    .custom-map-pin {
-      width: 28px;
-      height: 28px;
+    .map-repair-panel {
+      min-height: 360px;
       display: grid;
       place-items: center;
-      border: 2px solid #fff;
-      border-radius: 50% 50% 50% 0;
-      transform: rotate(-45deg);
-      box-shadow: 0 2px 7px rgba(0,0,0,.35);
+      padding: 30px;
+      border: 1px dashed var(--line);
+      border-radius: 18px;
+      text-align: center;
+      background: rgba(255,255,255,.025);
     }
 
-    .custom-map-pin > span {
-      transform: rotate(45deg);
-      font-size: 14px;
-      line-height: 1;
+    .map-repair-icon {
+      margin-bottom: 12px;
+      font-size: 54px;
     }
 
-    .custom-map-pin.camping {
-      background: #f5c451;
+    .google-map-info {
+      max-width: 280px;
+      color: #17242a;
+      font-family: Arial, sans-serif;
     }
 
-    .custom-map-pin.location {
-      background: #2f9ed5;
-    }
-
-  
-    .pins-table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.025)}
-    .pins-table{width:100%;border-collapse:collapse;min-width:660px}
-    .pins-table th,.pins-table td{padding:13px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
-    .pins-table th{color:var(--muted);font-size:12px;font-weight:900;text-transform:uppercase;background:rgba(255,255,255,.035)}
-    .pins-table tbody tr:last-child td{border-bottom:0}
-    .pins-table-number{width:58px;color:var(--muted);font-weight:800}
-    .pins-table-category{width:170px;font-weight:800}
-    .pins-category-badge{display:inline-flex;padding:6px 9px;border:1px solid var(--line);border-radius:999px;white-space:nowrap;font-size:12px;font-weight:900}
-    .pins-category-badge.camping{color:#17242a;background:var(--accent);border-color:var(--accent)}
-    .pins-category-badge.location{color:var(--text);background:rgba(47,158,213,.18);border-color:rgba(47,158,213,.5)}
-    .pins-table-map{width:72px;text-align:center!important}
-    .pins-map-button{display:inline-grid;place-items:center;width:38px;height:38px;border:1px solid var(--line);border-radius:10px;color:var(--accent);background:rgba(255,255,255,.05);text-decoration:none;font-size:19px}
-    .pins-map-button:hover{border-color:var(--accent);background:rgba(245,196,81,.12)}
-    .pins-empty{padding:28px;color:var(--muted);text-align:center;line-height:1.5}
-
-  
-    .trip-address-fields {
-      margin-top: 16px;
-      padding-top: 16px;
-      border-top: 1px solid var(--line);
-    }
-
-    .trip-address-different {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin: 12px 0;
-      font-weight: 800;
-      cursor: pointer;
-    }
-
-    .trip-address-different input {
-      width: auto;
-      margin: 0;
-    }
-
-    #tripEndAddressWrap.hidden {
-      display: none;
-    }
-
-  
-    .schedule-route-point {
-      margin: 0 0 12px;
-      padding: 14px 16px;
-      border: 1px solid var(--line);
-      border-radius: 13px;
-      background: rgba(245,196,81,.08);
-    }
-
-    .schedule-route-point.end {
-      margin: 12px 0 0;
-    }
-
-    .schedule-route-point-label {
-      color: var(--accent);
-      font-size: 12px;
-      font-weight: 900;
-      text-transform: uppercase;
-      letter-spacing: .04em;
-    }
-
-    .schedule-route-point-address {
-      margin-top: 5px;
-      font-weight: 900;
-      overflow-wrap: anywhere;
-    }
-
-  
-    .admin-trips-table td strong {
-      display: inline-block;
-      margin-bottom: 4px;
-      color: var(--accent);
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: .04em;
-    }
-
-  
-    .admin-trip-route-cell {
-      min-width: 150px;
-      max-width: 230px;
-      line-height: 1.4;
-      overflow-wrap: anywhere;
-    }
-
-    .admin-trip-route-label {
+    .google-map-info strong {
       display: block;
-      margin-bottom: 4px;
-      color: var(--accent);
-      font-size: 11px;
-      font-weight: 900;
-      text-transform: uppercase;
-      letter-spacing: .04em;
+      margin-bottom: 6px;
+      font-size: 15px;
     }
 
-  
-    .schedule-day {
-      border: 1px solid var(--line);
-      border-radius: 13px;
-      background: rgba(255,255,255,.025);
-      overflow: hidden;
+    .google-map-info p {
+      margin: 0 0 8px;
+      line-height: 1.4;
     }
 
-    .schedule-day + .schedule-day {
-      margin-top: 9px;
+    .google-map-info a {
+      color: #145dbf;
+      font-weight: 700;
     }
 
-    .schedule-day summary {
-      display: grid;
-      grid-template-columns: 95px 125px 150px minmax(170px, 1fr) auto;
-      gap: 12px;
-      align-items: center;
-      padding: 13px 15px;
-      cursor: pointer;
-      list-style: none;
-    }
-
-    .schedule-day summary::-webkit-details-marker {
-      display: none;
-    }
-
-    .schedule-day summary:hover {
-      background: rgba(255,255,255,.04);
-    }
-
-    .schedule-day-number {
-      color: var(--accent);
-      font-weight: 900;
-      white-space: nowrap;
-    }
-
-    .schedule-day-date-compact,
-    .schedule-day-weekday {
-      font-weight: 800;
-      white-space: nowrap;
-    }
-
-    .schedule-day-overnight {
-      min-width: 0;
-      color: var(--muted);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .schedule-day-chevron {
-      color: var(--muted);
-      font-size: 18px;
-      transition: transform .2s ease;
-    }
-
-    .schedule-day[open] .schedule-day-chevron {
-      transform: rotate(180deg);
-    }
-
-    .schedule-day-body {
-      padding: 16px;
-      border-top: 1px solid var(--line);
-    }
-
-    .schedule-overnight-form {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 12px;
-      align-items: end;
-    }
-
-    .schedule-overnight-form label {
-      margin: 0;
-    }
-
-    .schedule-readonly-night {
-      padding: 12px 14px;
-      border: 1px solid var(--line);
-      border-radius: 11px;
-      background: rgba(255,255,255,.025);
-      font-weight: 800;
-    }
-
-    @media (max-width: 850px) {
-      .schedule-day summary {
-        grid-template-columns: 85px 110px 120px minmax(130px, 1fr) auto;
-        gap: 8px;
-        padding: 12px;
-      }
-    }
-
-    @media (max-width: 650px) {
-      .schedule-day summary {
-        grid-template-columns: 75px 1fr auto;
-      }
-
-      .schedule-day-weekday {
-        display: none;
-      }
-
-      .schedule-day-overnight {
-        grid-column: 1 / 3;
-      }
-
-      .schedule-overnight-form {
-        grid-template-columns: 1fr;
-      }
-    }
-
-  
-    .schedule-day-locations {
-      margin-top: 16px;
-      padding-top: 16px;
-      border-top: 1px solid var(--line);
-    }
-
-    .schedule-day-locations h3 {
-      margin: 0 0 12px;
-      font-size: 17px;
-    }
-
-    .schedule-location-form {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 12px;
-      align-items: end;
-    }
-
-    .schedule-location-form label {
-      margin: 0;
-    }
-
-    .schedule-assigned-locations {
-      display: grid;
-      gap: 8px;
-      margin-top: 12px;
-    }
-
-    .schedule-assigned-location {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 10px;
-      align-items: center;
-      padding: 11px 12px;
-      border: 1px solid var(--line);
-      border-radius: 11px;
-      background: rgba(255,255,255,.025);
-    }
-
-    .schedule-assigned-location-name {
-      font-weight: 900;
-    }
-
-    .schedule-assigned-location-address {
-      margin-top: 3px;
-      color: var(--muted);
-      font-size: 13px;
-      overflow-wrap: anywhere;
-    }
-
-    @media (max-width: 650px) {
-      .schedule-location-form,
-      .schedule-assigned-location {
-        grid-template-columns: 1fr;
+    @media (max-width: 700px) {
+      #tripPlacesMap {
+        width: 100%;
+        min-height: 340px;
+        aspect-ratio: 1 / 1;
       }
     }
 
@@ -3575,6 +3262,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
+    const GOOGLE_MAPS_API_KEY = "AIzaSyCdd-LwgDKT5ZqBuQfvXOLmZkGpSSWWTtM";
     const SUPABASE_URL = "https://xzorbvkwfeaypuweptec.supabase.co";
     const SUPABASE_KEY = "sb_publishable_iBl7YOQZ14XNHF5vflZhdA_6l5U6-Uo";
     const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -3601,12 +3289,12 @@
     let tripLocations = [];
     let locationScheduleUsage = [];
     let overnightRouteStops = [];
-    let tripLeafletMap = null;
-    let tripMapMarkers = [];
-    let mapGeocodeCache = new Map();
-    let leafletAssetsPromise = null;
+    let locationGoogleMap = null;
+    let locationMapInfoWindow = null;
+    let locationMapMarkers = [];
+    let googleMapsLoaderPromise = null;
     let normalMapHost = null;
-    let currentMapBounds = [];
+    let currentMapBounds = null;
 
     const authView = document.getElementById("authView");
     const accountView = document.getElementById("accountView");
@@ -5233,41 +4921,41 @@
 
 
 
-    function loadLeafletAssets() {
-      if (window.L) return Promise.resolve();
-      if (leafletAssetsPromise) return leafletAssetsPromise;
+    function loadGoogleMapsLibrary() {
+      if (window.google?.maps) {
+        return Promise.resolve(window.google.maps);
+      }
 
-      leafletAssetsPromise = new Promise((resolve, reject) => {
-        if (!document.querySelector('link[data-leaflet-css="true"]')) {
-          const stylesheet = document.createElement("link");
-          stylesheet.rel = "stylesheet";
-          stylesheet.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-          stylesheet.dataset.leafletCss = "true";
-          document.head.appendChild(stylesheet);
-        }
+      if (!GOOGLE_MAPS_API_KEY) {
+        return Promise.reject(new Error("Brak klucza Google Maps API."));
+      }
 
-        const existingScript = document.querySelector('script[data-leaflet-script="true"]');
+      if (googleMapsLoaderPromise) return googleMapsLoaderPromise;
 
-        if (existingScript) {
-          if (window.L) {
-            resolve();
-            return;
-          }
+      googleMapsLoaderPromise = new Promise((resolve, reject) => {
+        const callbackName = `initKamperTeamGoogleMaps_${Date.now()}`;
 
-          existingScript.addEventListener("load", resolve, { once: true });
-          existingScript.addEventListener("error", reject, { once: true });
-          return;
-        }
+        window[callbackName] = () => {
+          delete window[callbackName];
+          resolve(window.google.maps);
+        };
 
         const script = document.createElement("script");
-        script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-        script.dataset.leafletScript = "true";
-        script.onload = resolve;
-        script.onerror = () => reject(new Error("Nie udało się załadować biblioteki mapy."));
+        script.src =
+          `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(GOOGLE_MAPS_API_KEY)}`
+          + `&callback=${callbackName}&v=weekly`;
+        script.async = true;
+        script.defer = true;
+        script.onerror = () => {
+          delete window[callbackName];
+          googleMapsLoaderPromise = null;
+          reject(new Error("Nie udało się wczytać Google Maps."));
+        };
+
         document.head.appendChild(script);
       });
 
-      return leafletAssetsPromise;
+      return googleMapsLoaderPromise;
     }
 
     function setupMapInnerTabs() {
@@ -5285,19 +4973,13 @@
 
           if (panelName === "points") {
             await loadPlacesMap();
-            setTimeout(() => tripLeafletMap?.invalidateSize(), 80);
           }
         });
       });
 
       document.getElementById("showAllPinsButton")?.addEventListener("click", () => {
-        if (!tripLeafletMap || !currentMapBounds.length) return;
-
-        if (currentMapBounds.length === 1) {
-          tripLeafletMap.setView(currentMapBounds[0], 12);
-        } else {
-          tripLeafletMap.fitBounds(currentMapBounds, { padding: [30, 30] });
-        }
+        if (!locationGoogleMap || !currentMapBounds) return;
+        locationGoogleMap.fitBounds(currentMapBounds, 70);
       });
 
       document.getElementById("expandTripMapButton")?.addEventListener("click", expandTripMap);
@@ -5317,7 +4999,12 @@
       overlay.setAttribute("aria-hidden", "false");
       document.body.classList.add("map-expanded-open");
 
-      setTimeout(() => tripLeafletMap?.invalidateSize(), 100);
+      setTimeout(() => {
+        if (locationGoogleMap) {
+          google.maps.event.trigger(locationGoogleMap, "resize");
+          if (currentMapBounds) locationGoogleMap.fitBounds(currentMapBounds, 70);
+        }
+      }, 120);
     }
 
     function closeExpandedTripMap() {
@@ -5331,42 +5018,12 @@
       overlay.setAttribute("aria-hidden", "true");
       document.body.classList.remove("map-expanded-open");
 
-      setTimeout(() => tripLeafletMap?.invalidateSize(), 100);
-    }
-
-    async function geocodeMapAddress(address) {
-      const normalized = String(address || "").trim();
-
-      if (!normalized) return null;
-      if (mapGeocodeCache.has(normalized)) {
-        return mapGeocodeCache.get(normalized);
-      }
-
-      try {
-        const url =
-          "https://nominatim.openstreetmap.org/search"
-          + `?format=jsonv2&limit=1&countrycodes=pl,de,dk,cz,at&accept-language=pl&q=${encodeURIComponent(normalized)}`;
-
-        const response = await fetch(url, {
-          headers: { "Accept": "application/json" }
-        });
-
-        if (!response.ok) throw new Error("Błąd wyszukiwania adresu.");
-
-        const results = await response.json();
-        const first = results?.[0];
-
-        const coordinates = first
-          ? { lat: Number(first.lat), lon: Number(first.lon) }
-          : null;
-
-        mapGeocodeCache.set(normalized, coordinates);
-        return coordinates;
-      } catch (error) {
-        console.warn("Nie udało się ustalić współrzędnych:", normalized, error);
-        mapGeocodeCache.set(normalized, null);
-        return null;
-      }
+      setTimeout(() => {
+        if (locationGoogleMap) {
+          google.maps.event.trigger(locationGoogleMap, "resize");
+          if (currentMapBounds) locationGoogleMap.fitBounds(currentMapBounds, 70);
+        }
+      }, 120);
     }
 
     async function loadPlacesMap() {
@@ -5375,14 +5032,15 @@
       const campingCounter = document.getElementById("campingPointsCount");
       const locationCounter = document.getElementById("locationPointsCount");
       const pinsCounter = document.getElementById("visiblePinsCount");
+      const canvas = document.getElementById("tripPlacesMap");
 
-      if (!selectedTrip || !message || !status) return;
+      if (!selectedTrip || !message || !status || !canvas) return;
 
       try {
-        showMessage(message, "Ładowanie mapy...");
+        showMessage(message, "Ładowanie Google Maps...");
+        status.textContent = "";
 
-        await loadLeafletAssets();
-        initializeLeafletMap();
+        await loadGoogleMapsLibrary();
 
         const [
           { data: campingData, error: campingError },
@@ -5390,12 +5048,12 @@
         ] = await Promise.all([
           client
             .from("trip_places")
-            .select("id, name, description, address, place_type")
+            .select("id, name, description, address, place_type, website_url")
             .eq("trip_id", selectedTrip.id)
             .order("name", { ascending: true }),
           client
             .from("trip_locations")
-            .select("id, name, description, address")
+            .select("id, name, description, address, website_url")
             .eq("trip_id", selectedTrip.id)
             .order("name", { ascending: true })
         ]);
@@ -5411,111 +5069,159 @@
         locationCounter.textContent = `Miejsca: ${locations.length}`;
 
         const points = [
-          ...campings.map(item => ({ ...item, source: "camping" })),
-          ...locations.map(item => ({ ...item, source: "location" }))
+          ...campings.map(item => ({
+            ...item,
+            source: "camping",
+            sourceLabel: "Kemping / miejsce postoju"
+          })),
+          ...locations.map(item => ({
+            ...item,
+            source: "location",
+            sourceLabel: "Miejsce"
+          }))
         ];
 
-        clearLeafletMarkers();
-        currentMapBounds = [];
-        tripLeafletMap.setView([52.05, 19.15], 6);
-
         if (!points.length) {
-          showMessage(
-            message,
-            "Brak adresów do pokazania. Uzupełnij adresy w zakładkach „Kempingi i postoje” lub „Miejsca”.",
-            "warning"
-          );
+          canvas.innerHTML = `
+            <div class="map-loading-placeholder">
+              Brak adresów do pokazania. Uzupełnij adresy w zakładkach
+              „Kempingi i postoje” lub „Miejsca”.
+            </div>
+          `;
           pinsCounter.textContent = "Pinezki na mapie: 0";
-          status.textContent = "";
+          showMessage(message, "", "");
           return;
         }
 
-        showMessage(message, "");
-        status.textContent = `Ustalanie położenia punktów: 0 z ${points.length}...`;
+        canvas.innerHTML = "";
+        locationMapMarkers.forEach(marker => marker.setMap?.(null));
+        locationMapMarkers = [];
 
-        let visiblePins = 0;
+        locationGoogleMap = new google.maps.Map(canvas, {
+          center: { lat: 52.05, lng: 19.15 },
+          zoom: 6,
+          mapTypeControl: true,
+          streetViewControl: false,
+          fullscreenControl: true,
+          zoomControl: true,
+          gestureHandling: "greedy"
+        });
+
+        locationMapInfoWindow = new google.maps.InfoWindow();
+        const geocoder = new google.maps.Geocoder();
+        const bounds = new google.maps.LatLngBounds();
+
+        let successfulMarkers = 0;
+        let visibleCampingPins = 0;
+        let visibleLocationPins = 0;
 
         for (let index = 0; index < points.length; index += 1) {
           const point = points[index];
           status.textContent = `Ustalanie położenia punktów: ${index + 1} z ${points.length}...`;
 
-          const coordinates = await geocodeMapAddress(point.address);
-          if (!coordinates) continue;
+          try {
+            const response = await geocoder.geocode({ address: point.address });
+            const result = response.results?.[0];
+            if (!result) continue;
 
-          const marker = L.marker([coordinates.lat, coordinates.lon]).addTo(tripLeafletMap);
-          const sourceLabel =
-            point.source === "camping"
-              ? "Kemping / miejsce postoju"
-              : "Miejsce";
+            const position = result.geometry.location;
+            bounds.extend(position);
 
-          marker.bindPopup(`
-            <strong>${escapeHtml(point.name)}</strong><br>
-            <span>${escapeHtml(sourceLabel)}</span><br>
-            <span>${escapeHtml(point.address)}</span><br>
-            <a
-              href="${escapeHtml(googleMapsAddressUrl(point.address))}"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Otwórz w Google Maps
-            </a>
-          `);
+            const marker = new google.maps.Marker({
+              map: locationGoogleMap,
+              position,
+              title: point.name,
+              label: {
+                text: point.source === "camping" ? "K" : "M",
+                color: point.source === "camping" ? "#17242a" : "#ffffff",
+                fontWeight: "800"
+              },
+              icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 12,
+                fillColor: point.source === "camping" ? "#f7c74f" : "#2f80ed",
+                fillOpacity: 1,
+                strokeColor: "#ffffff",
+                strokeWeight: 2
+              }
+            });
 
-          tripMapMarkers.push(marker);
-          currentMapBounds.push([coordinates.lat, coordinates.lon]);
-          visiblePins += 1;
+            marker.addListener("click", () => {
+              const mapsUrl = googleMapsAddressUrl(point.address);
+              const website = normalizeWebsiteUrl(point.website_url || "");
+
+              locationMapInfoWindow.setContent(`
+                <div class="google-map-info">
+                  <strong>${escapeHtml(point.name || point.sourceLabel)}</strong>
+                  <p>${escapeHtml(point.sourceLabel)}</p>
+                  <p>${escapeHtml(point.address)}</p>
+                  ${point.description ? `<p>${escapeHtml(point.description)}</p>` : ""}
+                  <a href="${escapeHtml(mapsUrl)}" target="_blank" rel="noopener noreferrer">
+                    Otwórz w Google Maps
+                  </a>
+                  ${website ? `
+                    <br>
+                    <a href="${escapeHtml(website)}" target="_blank" rel="noopener noreferrer">
+                      Otwórz stronę
+                    </a>
+                  ` : ""}
+                </div>
+              `);
+
+              locationMapInfoWindow.open({
+                anchor: marker,
+                map: locationGoogleMap
+              });
+            });
+
+            locationMapMarkers.push(marker);
+            successfulMarkers += 1;
+
+            if (point.source === "camping") {
+              visibleCampingPins += 1;
+            } else {
+              visibleLocationPins += 1;
+            }
+          } catch (error) {
+            console.warn("Nie udało się odnaleźć adresu:", point.address, error);
+          }
         }
 
-        pinsCounter.textContent = `Pinezki na mapie: ${visiblePins}`;
-        status.textContent = visiblePins
-          ? `Wyświetlono ${visiblePins} punktów.`
-          : "Nie udało się odnaleźć adresów na mapie. Sprawdź ich pisownię.";
+        if (!successfulMarkers) {
+          throw new Error("Google Maps nie odnalazło żadnego z zapisanych adresów.");
+        }
 
-        setTimeout(() => tripLeafletMap?.invalidateSize(), 80);
+        currentMapBounds = bounds;
+
+        if (successfulMarkers === 1) {
+          locationGoogleMap.setCenter(bounds.getCenter());
+          locationGoogleMap.setZoom(14);
+        } else {
+          locationGoogleMap.fitBounds(bounds, 70);
+        }
+
+        pinsCounter.textContent = `Pinezki na mapie: ${successfulMarkers}`;
+        status.textContent =
+          `Wyświetlono: ${visibleCampingPins} kempingów/postojów i `
+          + `${visibleLocationPins} miejsc.`;
+
+        showMessage(message, "", "");
       } catch (error) {
         console.error(error);
+
+        canvas.innerHTML = `
+          <div class="map-loading-placeholder">
+            Nie udało się załadować Google Maps.
+          </div>
+        `;
+
         showMessage(
           message,
-          "Nie udało się załadować mapy. Pozostałe zakładki strony działają normalnie.",
+          error.message || "Nie udało się załadować mapy.",
           "error"
         );
         status.textContent = "";
       }
-    }
-
-    function initializeLeafletMap() {
-      const mapContainer = document.getElementById("tripPlacesMap");
-      if (!mapContainer || typeof L === "undefined") return;
-
-      if (!tripLeafletMap) {
-        mapContainer.innerHTML = "";
-
-        tripLeafletMap = L.map(mapContainer, {
-          center: [52.05, 19.15],
-          zoom: 6,
-          minZoom: 4,
-          maxZoom: 18,
-          zoomControl: true
-        });
-
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          maxZoom: 19,
-          attribution: "&copy; OpenStreetMap"
-        }).addTo(tripLeafletMap);
-      }
-
-      tripLeafletMap.setView([52.05, 19.15], 6);
-      setTimeout(() => tripLeafletMap.invalidateSize(), 50);
-    }
-
-    function clearLeafletMarkers() {
-      if (!tripLeafletMap) return;
-
-      tripMapMarkers.forEach(marker => {
-        tripLeafletMap.removeLayer(marker);
-      });
-
-      tripMapMarkers = [];
     }
 
     if (document.readyState === "loading") {
