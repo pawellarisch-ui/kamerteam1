@@ -345,6 +345,66 @@
       gap: 22px;
     }
 
+    .trips-table {
+      width: 100%;
+    }
+
+    .trips-table table {
+      width: 100%;
+      min-width: 980px;
+    }
+
+    .trip-open-button {
+      white-space: nowrap;
+    }
+
+    .trip-detail-header {
+      margin-bottom: 22px;
+    }
+
+    .trip-detail-header h1 {
+      margin-bottom: 8px;
+    }
+
+    .trip-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 22px 0;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .trip-tab {
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+      font-weight: 700;
+    }
+
+    .trip-tab.active {
+      color: #17242a;
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .trip-tab-content {
+      display: none;
+    }
+
+    .trip-tab-content.active {
+      display: block;
+    }
+
+    .placeholder-panel {
+      min-height: 220px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+    }
+
     @media (max-width: 900px) {
       .hero,
       .two-columns,
@@ -454,7 +514,65 @@
           </div>
         </div>
         <div id="tripsMessage" class="message"></div>
-        <div id="tripsGrid" class="grid"></div>
+        <div id="tripsGrid" class="trips-table"></div>
+      </section>
+
+      <section id="page-trip-detail" class="page">
+        <button class="button secondary" type="button" onclick="showPage('trips')">← Wróć do listy wyjazdów</button>
+
+        <div class="trip-detail-header">
+          <h1 id="tripDetailTitle">Wyjazd</h1>
+          <div id="tripDetailDates" class="trip-meta"></div>
+          <p id="tripDetailDescription" class="lead"></p>
+        </div>
+
+        <div class="trip-tabs" id="tripTabs">
+          <button class="trip-tab active" data-trip-tab="pulpit">Pulpit</button>
+          <button class="trip-tab" data-trip-tab="harmonogram">Harmonogram</button>
+          <button class="trip-tab" data-trip-tab="mapa">Mapa wyjazdu</button>
+          <button class="trip-tab" data-trip-tab="kempingi">Kempingi i postoje</button>
+          <button class="trip-tab" data-trip-tab="restauracje">Restauracje</button>
+          <button class="trip-tab" data-trip-tab="zadania">Lista zadań</button>
+          <button class="trip-tab" data-trip-tab="zdjecia">Zdjęcia</button>
+          <button class="trip-tab" data-trip-tab="czat">Czat</button>
+        </div>
+
+        <div id="trip-tab-pulpit" class="trip-tab-content active">
+          <div class="card placeholder-panel">
+            <div>
+              <h2>Pulpit wyjazdu</h2>
+              <p class="muted">Tutaj pojawi się podsumowanie najważniejszych informacji o wyjeździe.</p>
+            </div>
+          </div>
+        </div>
+
+        <div id="trip-tab-harmonogram" class="trip-tab-content">
+          <div class="card placeholder-panel"><div><h2>Harmonogram</h2><p class="muted">Plan wyjazdu dzień po dniu dodamy w kolejnym etapie.</p></div></div>
+        </div>
+
+        <div id="trip-tab-mapa" class="trip-tab-content">
+          <div class="card placeholder-panel"><div><h2>Mapa wyjazdu</h2><p class="muted">Tutaj pojawi się mapa z trasą i punktami wyjazdu.</p></div></div>
+        </div>
+
+        <div id="trip-tab-kempingi" class="trip-tab-content">
+          <div class="card placeholder-panel"><div><h2>Kempingi i miejsca postoju</h2><p class="muted">Tutaj będą kempingi, camperparki, parkingi i postoje.</p></div></div>
+        </div>
+
+        <div id="trip-tab-restauracje" class="trip-tab-content">
+          <div class="card placeholder-panel"><div><h2>Restauracje</h2><p class="muted">Tutaj pojawią się restauracje przypisane do wyjazdu.</p></div></div>
+        </div>
+
+        <div id="trip-tab-zadania" class="trip-tab-content">
+          <div class="card placeholder-panel"><div><h2>Lista zadań</h2><p class="muted">Tutaj pojawią się zadania, osoby odpowiedzialne i status wykonania.</p></div></div>
+        </div>
+
+        <div id="trip-tab-zdjecia" class="trip-tab-content">
+          <div class="card placeholder-panel"><div><h2>Zdjęcia</h2><p class="muted">Tutaj znajdzie się galeria zdjęć z wyjazdu.</p></div></div>
+        </div>
+
+        <div id="trip-tab-czat" class="trip-tab-content">
+          <div class="card placeholder-panel"><div><h2>Czat</h2><p class="muted">Tutaj powstanie czat dla uczestników i gości wyjazdu.</p></div></div>
+        </div>
       </section>
 
       <section id="page-contact" class="page">
@@ -566,6 +684,8 @@
     let currentProfile = null;
     let adminTrips = [];
     let adminUsers = [];
+    let availableTrips = [];
+    let selectedTrip = null;
 
     const authView = document.getElementById("authView");
     const accountView = document.getElementById("accountView");
@@ -838,17 +958,19 @@
 
       showMessage(message, "Ładowanie wyjazdów...");
 
-      const { data, error } = await client
+      const { data: tripsData, error: tripsError } = await client
         .from("trips")
         .select("id, title, description, start_date, end_date, created_at")
         .order("start_date", { ascending: true, nullsFirst: false });
 
-      if (error) {
-        showMessage(message, error.message, "error");
+      if (tripsError) {
+        showMessage(message, tripsError.message, "error");
         return;
       }
 
-      if (!data?.length) {
+      availableTrips = tripsData || [];
+
+      if (!availableTrips.length) {
         showMessage(
           message,
           currentProfile.global_role === "administrator"
@@ -859,16 +981,104 @@
         return;
       }
 
+      let membersByTrip = new Map();
+
+      if (currentProfile.global_role === "administrator") {
+        const [{ data: membersData }, { data: profilesData }] = await Promise.all([
+          client.from("trip_members").select("trip_id, user_id, role"),
+          client.from("profiles").select("id, first_name, last_name, email")
+        ]);
+
+        const profilesById = new Map((profilesData || []).map(profile => [profile.id, profile]));
+
+        (membersData || []).forEach(member => {
+          if (!membersByTrip.has(member.trip_id)) {
+            membersByTrip.set(member.trip_id, { uczestnik: [], gosc: [] });
+          }
+          const profile = profilesById.get(member.user_id);
+          const name = profile ? userDisplayName(profile) : "Nieznany użytkownik";
+          membersByTrip.get(member.trip_id)[member.role]?.push(name);
+        });
+      }
+
       showMessage(message, "");
-      grid.innerHTML = data.map(trip => `
-        <article class="trip-card">
-          <h3>${escapeHtml(trip.title)}</h3>
-          <div class="trip-meta">${formatDate(trip.start_date)} – ${formatDate(trip.end_date)}</div>
-          <p class="muted">${escapeHtml(trip.description || "Brak dodatkowego opisu.")}</p>
-          <span class="badge">Szczegóły wyjazdu dodamy później</span>
-        </article>
-      `).join("");
+
+      grid.innerHTML = `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nazwa</th>
+                <th>Data</th>
+                <th>Opis</th>
+                <th>Uczestnicy</th>
+                <th>Goście</th>
+                <th>Otwórz</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${availableTrips.map(trip => {
+                const members = membersByTrip.get(trip.id) || { uczestnik: [], gosc: [] };
+                const participants = members.uczestnik.length
+                  ? members.uczestnik.map(name => `<span class="badge">${escapeHtml(name)}</span>`).join(" ")
+                  : '<span class="muted">Brak</span>';
+                const guests = members.gosc.length
+                  ? members.gosc.map(name => `<span class="badge">${escapeHtml(name)}</span>`).join(" ")
+                  : '<span class="muted">Brak</span>';
+
+                return `
+                  <tr>
+                    <td><strong>${escapeHtml(trip.title)}</strong></td>
+                    <td>${formatDate(trip.start_date)} – ${formatDate(trip.end_date)}</td>
+                    <td>${escapeHtml(trip.description || "Brak opisu.")}</td>
+                    <td><div class="actions">${participants}</div></td>
+                    <td><div class="actions">${guests}</div></td>
+                    <td>
+                      <button class="button small-button trip-open-button" onclick="openTrip('${trip.id}')">
+                        Otwórz
+                      </button>
+                    </td>
+                  </tr>
+                `;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
     }
+
+    function openTrip(tripId) {
+      selectedTrip = availableTrips.find(trip => trip.id === tripId)
+        || adminTrips.find(trip => trip.id === tripId);
+
+      if (!selectedTrip) {
+        alert("Nie udało się znaleźć wyjazdu.");
+        return;
+      }
+
+      document.getElementById("tripDetailTitle").textContent = selectedTrip.title;
+      document.getElementById("tripDetailDates").textContent =
+        `${formatDate(selectedTrip.start_date)} – ${formatDate(selectedTrip.end_date)}`;
+      document.getElementById("tripDetailDescription").textContent =
+        selectedTrip.description || "Brak dodatkowego opisu.";
+
+      activateTripTab("pulpit");
+      showPage("trip-detail");
+    }
+
+    function activateTripTab(tabName) {
+      document.querySelectorAll(".trip-tab").forEach(button => {
+        button.classList.toggle("active", button.dataset.tripTab === tabName);
+      });
+
+      document.querySelectorAll(".trip-tab-content").forEach(content => {
+        content.classList.toggle("active", content.id === `trip-tab-${tabName}`);
+      });
+    }
+
+    document.querySelectorAll(".trip-tab").forEach(button => {
+      button.addEventListener("click", () => activateTripTab(button.dataset.tripTab));
+    });
 
     async function loadAdminPanel() {
       const isAdmin = currentProfile?.global_role === "administrator" && currentProfile?.status === "active";
