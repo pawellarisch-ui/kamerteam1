@@ -1,4 +1,4 @@
-const CACHE_NAME = "kamperteam-shell-v25";
+const CACHE_NAME = "kamperteam-shell-v21";
 const APP_SHELL = [
   "/",
   "/index.html",
