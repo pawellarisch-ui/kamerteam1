@@ -2625,6 +2625,116 @@
       letter-spacing: .04em;
     }
 
+  
+    .schedule-day {
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: rgba(255,255,255,.025);
+      overflow: hidden;
+    }
+
+    .schedule-day + .schedule-day {
+      margin-top: 9px;
+    }
+
+    .schedule-day summary {
+      display: grid;
+      grid-template-columns: 95px 125px 150px minmax(170px, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 13px 15px;
+      cursor: pointer;
+      list-style: none;
+    }
+
+    .schedule-day summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .schedule-day summary:hover {
+      background: rgba(255,255,255,.04);
+    }
+
+    .schedule-day-number {
+      color: var(--accent);
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .schedule-day-date-compact,
+    .schedule-day-weekday {
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .schedule-day-overnight {
+      min-width: 0;
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .schedule-day-chevron {
+      color: var(--muted);
+      font-size: 18px;
+      transition: transform .2s ease;
+    }
+
+    .schedule-day[open] .schedule-day-chevron {
+      transform: rotate(180deg);
+    }
+
+    .schedule-day-body {
+      padding: 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .schedule-overnight-form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .schedule-overnight-form label {
+      margin: 0;
+    }
+
+    .schedule-readonly-night {
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: rgba(255,255,255,.025);
+      font-weight: 800;
+    }
+
+    @media (max-width: 850px) {
+      .schedule-day summary {
+        grid-template-columns: 85px 110px 120px minmax(130px, 1fr) auto;
+        gap: 8px;
+        padding: 12px;
+      }
+    }
+
+    @media (max-width: 650px) {
+      .schedule-day summary {
+        grid-template-columns: 75px 1fr auto;
+      }
+
+      .schedule-day-weekday {
+        display: none;
+      }
+
+      .schedule-day-overnight {
+        grid-column: 1 / 3;
+      }
+
+      .schedule-overnight-form {
+        grid-template-columns: 1fr;
+      }
+    }
+
   </style>
 </head>
 
@@ -4002,43 +4112,112 @@
         : "";
 
       list.innerHTML = startPoint + scheduleDays.map((day, index) => {
-        const items = scheduleItems.filter(item => item.schedule_day_id === day.id);
-        const routeText = [day.route_from, day.route_to].filter(Boolean).join(" → ") || "Trasa nieuzupełniona";
-        const planText = day.daily_plan || "Brak planu dnia";
+        const overnightLink = scheduleDayPlaces.find(
+          link => link.schedule_day_id === day.id && link.is_overnight
+        );
+
+        const overnightPlace = overnightLink
+          ? tripPlaces.find(place => place.id === overnightLink.place_id)
+          : null;
+
+        const overnightLabel = overnightPlace
+          ? `${overnightPlace.name}${overnightPlace.address ? ` — ${overnightPlace.address}` : ""}`
+          : "Brak wybranego noclegu";
 
         return `
-          <details class="schedule-day" ${index === 0 ? "open" : ""}>
+          <details class="schedule-day">
             <summary>
-              <div>
-                <div class="schedule-day-title">
-                  Dzień ${day.day_number} — ${escapeHtml(polishWeekday(day.day_date))}
-                </div>
-                <div class="trip-meta">${formatDate(day.day_date)}</div>
-              </div>
-              <div class="schedule-day-route">${escapeHtml(routeText)}</div>
-              <div class="schedule-day-plan">${escapeHtml(planText)}</div>
+              <span class="schedule-day-number">Dzień ${index + 1}</span>
+              <span class="schedule-day-date-compact">${formatDate(day.day_date)}</span>
+              <span class="schedule-day-weekday">${escapeHtml(polishWeekday(day.day_date))}</span>
+              <span class="schedule-day-overnight" title="${escapeHtml(overnightLabel)}">
+                Nocleg: ${escapeHtml(overnightLabel)}
+              </span>
+              <span class="schedule-day-chevron">⌄</span>
             </summary>
 
             <div class="schedule-day-body">
-              ${renderDayFields(day)}
-              ${renderSchedulePlaces(day)}
-
-              <h3>Plan godzina po godzinie</h3>
-
-              <div class="timeline">
-                ${items.length
-                  ? items.map(item => renderScheduleItem(item)).join("")
-                  : '<div class="schedule-empty">Nie dodano jeszcze punktów godzinowych.</div>'
-                }
-              </div>
-
-              ${canAddScheduleItem() ? renderScheduleItemForm(day.id) : `
-                <p class="muted">Masz dostęp tylko do podglądu harmonogramu.</p>
-              `}
+              ${renderCompactOvernightPicker(day, overnightPlace)}
             </div>
           </details>
         `;
       }).join("") + endPoint;
+    }
+
+    function renderCompactOvernightPicker(day, overnightPlace) {
+      if (!canAssignPlaceToDay()) {
+        return `
+          <div>
+            <label>Miejsce noclegu</label>
+            <div class="schedule-readonly-night">
+              ${overnightPlace
+                ? `${escapeHtml(overnightPlace.name)}${overnightPlace.address ? ` — ${escapeHtml(overnightPlace.address)}` : ""}`
+                : "Brak wybranego noclegu"
+              }
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <form
+          class="schedule-overnight-form"
+          onsubmit="saveCompactOvernight(event, '${day.id}')"
+        >
+          <label>
+            Miejsce noclegu z zakładki „Kempingi i postoje”
+            <select name="place_id">
+              <option value="">Brak wybranego noclegu</option>
+              ${tripPlaces.map(place => `
+                <option
+                  value="${place.id}"
+                  ${overnightPlace?.id === place.id ? "selected" : ""}
+                >
+                  ${escapeHtml(place.name)}
+                  ${place.address ? ` — ${escapeHtml(place.address)}` : ""}
+                </option>
+              `).join("")}
+            </select>
+          </label>
+
+          <button class="button" type="submit">Zapisz</button>
+        </form>
+
+        ${!tripPlaces.length ? `
+          <p class="muted">
+            Najpierw dodaj miejsce w zakładce „Kempingi i postoje”.
+          </p>
+        ` : ""}
+      `;
+    }
+
+    async function saveCompactOvernight(event, scheduleDayId) {
+      event.preventDefault();
+      if (!canAssignPlaceToDay()) return;
+
+      const form = event.currentTarget;
+      const button = form.querySelector('button[type="submit"]');
+      const placeId = new FormData(form).get("place_id");
+
+      button.disabled = true;
+
+      const { error } = placeId
+        ? await client.rpc("set_schedule_day_overnight", {
+            selected_schedule_day_id: scheduleDayId,
+            selected_place_id: placeId
+          })
+        : await client.rpc("clear_schedule_day_overnight", {
+            selected_schedule_day_id: scheduleDayId
+          });
+
+      button.disabled = false;
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      await loadSchedule();
     }
 
     function renderDayFields(day) {
