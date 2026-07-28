@@ -640,6 +640,184 @@
       }
     }
 
+  
+    .photos-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .photo-upload-box {
+      padding: 18px;
+      border: 1px dashed var(--line);
+      border-radius: 16px;
+      background: rgba(255,255,255,.03);
+      margin-bottom: 18px;
+    }
+
+    .photo-upload-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .photo-file-input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+      clip-path: inset(50%);
+    }
+
+    .photo-progress {
+      margin-top: 14px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .photo-gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .photo-card {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(8, 32, 39, 0.78);
+    }
+
+    .photo-thumb-button {
+      display: block;
+      width: 100%;
+      padding: 0;
+      border: 0;
+      cursor: pointer;
+      background: transparent;
+    }
+
+    .photo-thumb {
+      display: block;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      background: rgba(255,255,255,.04);
+    }
+
+    .photo-card-body {
+      padding: 13px;
+    }
+
+    .photo-caption {
+      min-height: 21px;
+      margin-bottom: 7px;
+      font-weight: 700;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+
+    .photo-meta {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .photo-card-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 11px;
+    }
+
+    .photo-empty {
+      grid-column: 1 / -1;
+      padding: 34px 20px;
+      border: 1px dashed var(--line);
+      border-radius: 16px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .photo-lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: none;
+      place-items: center;
+      padding:
+        calc(18px + env(safe-area-inset-top))
+        calc(18px + env(safe-area-inset-right))
+        calc(18px + env(safe-area-inset-bottom))
+        calc(18px + env(safe-area-inset-left));
+      background: rgba(0,0,0,.92);
+    }
+
+    .photo-lightbox.open {
+      display: grid;
+    }
+
+    .photo-lightbox-content {
+      position: relative;
+      width: min(1100px, 100%);
+      max-height: 100%;
+      display: grid;
+      gap: 12px;
+      justify-items: center;
+    }
+
+    .photo-lightbox-image {
+      max-width: 100%;
+      max-height: 80vh;
+      object-fit: contain;
+      border-radius: 14px;
+    }
+
+    .photo-lightbox-caption {
+      color: #fff;
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    .photo-lightbox-close {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      width: 44px;
+      height: 44px;
+      border: 1px solid rgba(255,255,255,.28);
+      border-radius: 50%;
+      color: #fff;
+      background: rgba(0,0,0,.7);
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 620px) {
+      .photo-gallery {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .photo-card-body {
+        padding: 10px;
+      }
+
+      .photo-caption {
+        font-size: 14px;
+      }
+
+      .photo-meta {
+        font-size: 11px;
+      }
+    }
+
   </style>
 </head>
 
@@ -803,7 +981,42 @@
         </div>
 
         <div id="trip-tab-zdjecia" class="trip-tab-content">
-          <div class="card placeholder-panel"><div><h2>Zdjęcia</h2><p class="muted">Tutaj znajdzie się galeria zdjęć z wyjazdu.</p></div></div>
+          <div class="photos-toolbar">
+            <div>
+              <h2>Zdjęcia z wyjazdu</h2>
+              <p class="muted">Dodawaj zdjęcia z biblioteki telefonu albo bezpośrednio z aparatu.</p>
+            </div>
+          </div>
+
+          <div id="photoUploadBox" class="photo-upload-box hidden">
+            <div class="photo-upload-actions">
+              <label class="button" for="photoLibraryInput">+ Wybierz zdjęcia</label>
+              <input
+                id="photoLibraryInput"
+                class="photo-file-input"
+                type="file"
+                accept="image/*"
+                multiple
+              >
+
+              <label class="button secondary" for="photoCameraInput">Zrób zdjęcie</label>
+              <input
+                id="photoCameraInput"
+                class="photo-file-input"
+                type="file"
+                accept="image/*"
+                capture="environment"
+              >
+            </div>
+
+            <p class="small">
+              Zdjęcia są automatycznie zmniejszane przed wysłaniem, aby szybciej działały w aplikacji.
+            </p>
+            <div id="photoUploadProgress" class="photo-progress"></div>
+          </div>
+
+          <div id="photosMessage" class="message"></div>
+          <div id="photoGallery" class="photo-gallery"></div>
         </div>
 
         <div id="trip-tab-czat" class="trip-tab-content">
@@ -925,6 +1138,8 @@
     let selectedTripRole = null;
     let scheduleDays = [];
     let scheduleItems = [];
+    let tripPhotos = [];
+    let photoObjectUrls = [];
 
     const authView = document.getElementById("authView");
     const accountView = document.getElementById("accountView");
@@ -1317,6 +1532,10 @@
       if (tabName === "harmonogram" && selectedTrip) {
         await loadSchedule();
       }
+
+      if (tabName === "zdjecia" && selectedTrip) {
+        await loadPhotos();
+      }
     }
 
     document.querySelectorAll(".trip-tab").forEach(button => {
@@ -1695,6 +1914,351 @@
       await loadSchedule();
     }
 
+
+    function canUploadPhotos() {
+      return currentProfile?.global_role === "administrator"
+        || selectedTripRole === "uczestnik";
+    }
+
+    function canDeletePhoto(photo) {
+      return currentProfile?.global_role === "administrator"
+        || photo.uploaded_by === currentUser?.id;
+    }
+
+    function cleanupPhotoObjectUrls() {
+      photoObjectUrls.forEach(url => URL.revokeObjectURL(url));
+      photoObjectUrls = [];
+    }
+
+    function formatDateTime(value) {
+      if (!value) return "";
+      return new Intl.DateTimeFormat("pl-PL", {
+        dateStyle: "medium",
+        timeStyle: "short"
+      }).format(new Date(value));
+    }
+
+    async function loadPhotos() {
+      const gallery = document.getElementById("photoGallery");
+      const message = document.getElementById("photosMessage");
+      const uploadBox = document.getElementById("photoUploadBox");
+
+      if (!selectedTrip) return;
+
+      cleanupPhotoObjectUrls();
+      gallery.innerHTML = "";
+      uploadBox.classList.add("hidden");
+      showMessage(message, "Ładowanie zdjęć...");
+
+      await resolveSelectedTripRole();
+
+      if (canUploadPhotos()) {
+        uploadBox.classList.remove("hidden");
+      }
+
+      const { data, error } = await client
+        .from("trip_photos")
+        .select("id, trip_id, storage_path, file_name, caption, uploaded_by, created_at")
+        .eq("trip_id", selectedTrip.id)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        showMessage(message, error.message, "error");
+        return;
+      }
+
+      tripPhotos = data || [];
+
+      if (!tripPhotos.length) {
+        showMessage(message, "");
+        gallery.innerHTML = `
+          <div class="photo-empty">
+            Nie dodano jeszcze żadnych zdjęć do tego wyjazdu.
+          </div>
+        `;
+        return;
+      }
+
+      const renderedPhotos = [];
+
+      for (const photo of tripPhotos) {
+        const { data: signedData, error: signedError } = await client.storage
+          .from("trip-photos")
+          .createSignedUrl(photo.storage_path, 60 * 60);
+
+        if (signedError || !signedData?.signedUrl) {
+          console.warn("Nie udało się pobrać zdjęcia:", signedError);
+          continue;
+        }
+
+        renderedPhotos.push({ ...photo, signedUrl: signedData.signedUrl });
+      }
+
+      showMessage(message, "");
+      renderPhotoGallery(renderedPhotos);
+    }
+
+    function renderPhotoGallery(photos) {
+      const gallery = document.getElementById("photoGallery");
+
+      if (!photos.length) {
+        gallery.innerHTML = `
+          <div class="photo-empty">
+            Nie udało się wyświetlić zdjęć.
+          </div>
+        `;
+        return;
+      }
+
+      gallery.innerHTML = photos.map(photo => `
+        <article class="photo-card">
+          <button
+            class="photo-thumb-button"
+            type="button"
+            onclick="openPhotoLightbox('${photo.id}', '${encodeURIComponent(photo.signedUrl)}')"
+          >
+            <img
+              class="photo-thumb"
+              src="${photo.signedUrl}"
+              alt="${escapeHtml(photo.caption || photo.file_name || "Zdjęcie z wyjazdu")}"
+              loading="lazy"
+            >
+          </button>
+
+          <div class="photo-card-body">
+            <div class="photo-caption">
+              ${escapeHtml(photo.caption || photo.file_name || "Zdjęcie")}
+            </div>
+            <div class="photo-meta">
+              Dodano: ${escapeHtml(formatDateTime(photo.created_at))}
+            </div>
+
+            ${canDeletePhoto(photo) ? `
+              <div class="photo-card-actions">
+                <button
+                  class="button secondary small-button"
+                  type="button"
+                  onclick="editPhotoCaption('${photo.id}')"
+                >
+                  Opis
+                </button>
+                <button
+                  class="button danger small-button"
+                  type="button"
+                  onclick="deletePhoto('${photo.id}')"
+                >
+                  Usuń
+                </button>
+              </div>
+            ` : ""}
+          </div>
+        </article>
+      `).join("");
+    }
+
+    async function imageFileToJpeg(file, maxDimension = 2200, quality = 0.82) {
+      const imageBitmap = await createImageBitmap(file);
+
+      let width = imageBitmap.width;
+      let height = imageBitmap.height;
+
+      if (width > maxDimension || height > maxDimension) {
+        const scale = Math.min(maxDimension / width, maxDimension / height);
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+
+      const context = canvas.getContext("2d", { alpha: false });
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, width, height);
+      context.drawImage(imageBitmap, 0, 0, width, height);
+
+      imageBitmap.close();
+
+      return await new Promise((resolve, reject) => {
+        canvas.toBlob(blob => {
+          if (!blob) {
+            reject(new Error("Nie udało się przetworzyć zdjęcia."));
+            return;
+          }
+          resolve(blob);
+        }, "image/jpeg", quality);
+      });
+    }
+
+    function safePhotoBaseName(fileName) {
+      const base = String(fileName || "zdjecie")
+        .replace(/\.[^.]+$/, "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9_-]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 60);
+
+      return base || "zdjecie";
+    }
+
+    async function uploadSelectedPhotos(fileList) {
+      const progress = document.getElementById("photoUploadProgress");
+
+      if (!selectedTrip || !currentUser || !canUploadPhotos()) {
+        alert("Nie masz uprawnień do dodawania zdjęć.");
+        return;
+      }
+
+      const files = Array.from(fileList || []).filter(file =>
+        file.type.startsWith("image/") || /\.(heic|heif|jpg|jpeg|png|webp)$/i.test(file.name)
+      );
+
+      if (!files.length) return;
+
+      let completed = 0;
+      let failed = 0;
+
+      for (const file of files) {
+        progress.textContent = `Przygotowywanie zdjęcia ${completed + failed + 1} z ${files.length}: ${file.name}`;
+
+        try {
+          const jpegBlob = await imageFileToJpeg(file);
+          const uniqueName = `${Date.now()}-${crypto.randomUUID()}-${safePhotoBaseName(file.name)}.jpg`;
+          const storagePath = `${selectedTrip.id}/${currentUser.id}/${uniqueName}`;
+
+          progress.textContent = `Wysyłanie zdjęcia ${completed + failed + 1} z ${files.length}...`;
+
+          const { error: uploadError } = await client.storage
+            .from("trip-photos")
+            .upload(storagePath, jpegBlob, {
+              contentType: "image/jpeg",
+              cacheControl: "3600",
+              upsert: false
+            });
+
+          if (uploadError) throw uploadError;
+
+          const { error: recordError } = await client
+            .from("trip_photos")
+            .insert({
+              trip_id: selectedTrip.id,
+              storage_path: storagePath,
+              file_name: file.name,
+              uploaded_by: currentUser.id
+            });
+
+          if (recordError) {
+            await client.storage.from("trip-photos").remove([storagePath]);
+            throw recordError;
+          }
+
+          completed += 1;
+        } catch (error) {
+          failed += 1;
+          console.error("Błąd wysyłania zdjęcia:", error);
+        }
+      }
+
+      progress.textContent = failed
+        ? `Dodano ${completed} zdjęć. Nie udało się dodać: ${failed}.`
+        : `Dodano ${completed} zdjęć.`;
+
+      document.getElementById("photoLibraryInput").value = "";
+      document.getElementById("photoCameraInput").value = "";
+
+      await loadPhotos();
+    }
+
+    async function editPhotoCaption(photoId) {
+      const photo = tripPhotos.find(item => item.id === photoId);
+      if (!photo || !canDeletePhoto(photo)) return;
+
+      const caption = prompt("Opis zdjęcia:", photo.caption || "");
+      if (caption === null) return;
+
+      const { error } = await client
+        .from("trip_photos")
+        .update({ caption: caption.trim() || null })
+        .eq("id", photoId);
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      await loadPhotos();
+    }
+
+    async function deletePhoto(photoId) {
+      const photo = tripPhotos.find(item => item.id === photoId);
+      if (!photo || !canDeletePhoto(photo)) return;
+
+      if (!confirm("Czy na pewno usunąć to zdjęcie?")) return;
+
+      const { error: storageError } = await client.storage
+        .from("trip-photos")
+        .remove([photo.storage_path]);
+
+      if (storageError) {
+        alert(storageError.message);
+        return;
+      }
+
+      const { error: databaseError } = await client
+        .from("trip_photos")
+        .delete()
+        .eq("id", photoId);
+
+      if (databaseError) {
+        alert(databaseError.message);
+        return;
+      }
+
+      await loadPhotos();
+    }
+
+    function openPhotoLightbox(photoId, encodedUrl) {
+      const photo = tripPhotos.find(item => item.id === photoId);
+      const lightbox = document.getElementById("photoLightbox");
+      const image = document.getElementById("photoLightboxImage");
+      const caption = document.getElementById("photoLightboxCaption");
+
+      image.src = decodeURIComponent(encodedUrl);
+      image.alt = photo?.caption || photo?.file_name || "Zdjęcie z wyjazdu";
+      caption.textContent = photo?.caption || photo?.file_name || "";
+      lightbox.classList.add("open");
+      lightbox.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closePhotoLightbox() {
+      const lightbox = document.getElementById("photoLightbox");
+      const image = document.getElementById("photoLightboxImage");
+
+      lightbox.classList.remove("open");
+      lightbox.setAttribute("aria-hidden", "true");
+      image.src = "";
+      document.body.style.overflow = "";
+    }
+
+    document.getElementById("photoLibraryInput").addEventListener("change", event => {
+      uploadSelectedPhotos(event.target.files);
+    });
+
+    document.getElementById("photoCameraInput").addEventListener("change", event => {
+      uploadSelectedPhotos(event.target.files);
+    });
+
+    document.getElementById("photoLightboxClose").addEventListener("click", closePhotoLightbox);
+
+    document.getElementById("photoLightbox").addEventListener("click", event => {
+      if (event.target.id === "photoLightbox") {
+        closePhotoLightbox();
+      }
+    });
+
+
     async function loadAdminPanel() {
       const isAdmin = currentProfile?.global_role === "administrator" && currentProfile?.status === "active";
       document.getElementById("adminDenied").classList.toggle("hidden", isAdmin);
@@ -2033,6 +2597,15 @@
       }
     })();
   </script>
+
+
+  <div id="photoLightbox" class="photo-lightbox" aria-hidden="true">
+    <div class="photo-lightbox-content">
+      <button id="photoLightboxClose" class="photo-lightbox-close" type="button" aria-label="Zamknij">×</button>
+      <img id="photoLightboxImage" class="photo-lightbox-image" alt="">
+      <div id="photoLightboxCaption" class="photo-lightbox-caption"></div>
+    </div>
+  </div>
 
 </body>
 </html>
