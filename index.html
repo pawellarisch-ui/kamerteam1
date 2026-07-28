@@ -2976,17 +2976,51 @@
         <div id="trip-tab-mapa" class="trip-tab-content">
           <div>
             <h2>Mapa wyjazdu</h2>
-            <p class="muted">Adresy są pobierane automatycznie z zakładek „Kempingi i postoje” oraz „Miejsca”.</p>
+            <p class="muted">
+              Pinezki są pobierane z zakładek „Kempingi i postoje” oraz „Miejsca”.
+            </p>
           </div>
 
           <div class="map-inner-tabs">
-            <button class="map-inner-tab active" type="button" data-map-panel="pins">Pinezki</button>
-            <button class="map-inner-tab" type="button" data-map-panel="route">Trasa wyjazdu</button>
+            <button class="map-inner-tab active" type="button" data-map-panel="points">
+              Mapa miejsc
+            </button>
+
+            <button class="map-inner-tab" type="button" data-map-panel="route">
+              Trasa wyjazdu
+            </button>
           </div>
 
-          <div id="map-panel-pins" class="map-inner-panel active">
-            <div id="pinsTableMessage" class="message"></div>
-            <div id="pinsTableContainer"><div class="pins-empty">Ładowanie adresów...</div></div>
+          <div id="map-panel-points" class="map-inner-panel active">
+            <div id="mapPointsMessage" class="message"></div>
+
+            <div class="map-points-summary">
+              <span id="campingPointsCount" class="map-point-badge">Kempingi i postoje: 0</span>
+              <span id="locationPointsCount" class="map-point-badge">Miejsca: 0</span>
+              <span id="visiblePinsCount" class="map-point-badge">Pinezki na mapie: 0</span>
+            </div>
+
+            <div id="mapGeocodeStatus" class="map-geocode-status"></div>
+
+            <div class="map-preview-toolbar">
+              <span class="muted">Widok początkowy: cała Polska</span>
+
+              <div class="map-preview-actions">
+                <button id="showAllPinsButton" class="map-small-button" type="button">
+                  Pokaż wszystkie pinezki
+                </button>
+
+                <button id="expandTripMapButton" class="map-small-button" type="button">
+                  Powiększ mapę
+                </button>
+              </div>
+            </div>
+
+            <div id="tripPlacesMap">
+              <div class="map-loading-placeholder">
+                Mapa zostanie załadowana po otwarciu tej zakładki.
+              </div>
+            </div>
           </div>
 
           <div id="map-panel-route" class="map-inner-panel">
@@ -2994,7 +3028,9 @@
               <div>
                 <div class="map-repair-icon">🚧</div>
                 <h2>Trasa wyjazdu jest w remoncie</h2>
-                <p class="muted">Tutaj później dopracujemy wizualizację całej trasy.</p>
+                <p class="muted">
+                  Tutaj później dopracujemy kolejność przejazdu i odległości.
+                </p>
               </div>
             </div>
           </div>
@@ -3565,6 +3601,12 @@
     let tripLocations = [];
     let locationScheduleUsage = [];
     let overnightRouteStops = [];
+    let tripLeafletMap = null;
+    let tripMapMarkers = [];
+    let mapGeocodeCache = new Map();
+    let leafletAssetsPromise = null;
+    let normalMapHost = null;
+    let currentMapBounds = [];
 
     const authView = document.getElementById("authView");
     const accountView = document.getElementById("accountView");
@@ -3992,7 +4034,7 @@
       }
 
       if (tabName === "mapa" && selectedTrip) {
-        await loadPinsTable();
+        await loadPlacesMap();
       }
 
       if (tabName === "pulpit" && selectedTrip) {
@@ -5187,6 +5229,299 @@
           `}
         </div>
       `;
+    }
+
+
+
+    function loadLeafletAssets() {
+      if (window.L) return Promise.resolve();
+      if (leafletAssetsPromise) return leafletAssetsPromise;
+
+      leafletAssetsPromise = new Promise((resolve, reject) => {
+        if (!document.querySelector('link[data-leaflet-css="true"]')) {
+          const stylesheet = document.createElement("link");
+          stylesheet.rel = "stylesheet";
+          stylesheet.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+          stylesheet.dataset.leafletCss = "true";
+          document.head.appendChild(stylesheet);
+        }
+
+        const existingScript = document.querySelector('script[data-leaflet-script="true"]');
+
+        if (existingScript) {
+          if (window.L) {
+            resolve();
+            return;
+          }
+
+          existingScript.addEventListener("load", resolve, { once: true });
+          existingScript.addEventListener("error", reject, { once: true });
+          return;
+        }
+
+        const script = document.createElement("script");
+        script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+        script.dataset.leafletScript = "true";
+        script.onload = resolve;
+        script.onerror = () => reject(new Error("Nie udało się załadować biblioteki mapy."));
+        document.head.appendChild(script);
+      });
+
+      return leafletAssetsPromise;
+    }
+
+    function setupMapInnerTabs() {
+      document.querySelectorAll(".map-inner-tab").forEach(button => {
+        button.addEventListener("click", async () => {
+          const panelName = button.dataset.mapPanel;
+
+          document.querySelectorAll(".map-inner-tab").forEach(item => {
+            item.classList.toggle("active", item === button);
+          });
+
+          document.querySelectorAll(".map-inner-panel").forEach(panel => {
+            panel.classList.toggle("active", panel.id === `map-panel-${panelName}`);
+          });
+
+          if (panelName === "points") {
+            await loadPlacesMap();
+            setTimeout(() => tripLeafletMap?.invalidateSize(), 80);
+          }
+        });
+      });
+
+      document.getElementById("showAllPinsButton")?.addEventListener("click", () => {
+        if (!tripLeafletMap || !currentMapBounds.length) return;
+
+        if (currentMapBounds.length === 1) {
+          tripLeafletMap.setView(currentMapBounds[0], 12);
+        } else {
+          tripLeafletMap.fitBounds(currentMapBounds, { padding: [30, 30] });
+        }
+      });
+
+      document.getElementById("expandTripMapButton")?.addEventListener("click", expandTripMap);
+      document.getElementById("closeExpandedMapButton")?.addEventListener("click", closeExpandedTripMap);
+    }
+
+    function expandTripMap() {
+      const overlay = document.getElementById("mapExpandedOverlay");
+      const expandedHost = document.getElementById("expandedMapHost");
+      const mapElement = document.getElementById("tripPlacesMap");
+
+      if (!overlay || !expandedHost || !mapElement) return;
+
+      normalMapHost = mapElement.parentElement;
+      expandedHost.appendChild(mapElement);
+      overlay.classList.add("visible");
+      overlay.setAttribute("aria-hidden", "false");
+      document.body.classList.add("map-expanded-open");
+
+      setTimeout(() => tripLeafletMap?.invalidateSize(), 100);
+    }
+
+    function closeExpandedTripMap() {
+      const overlay = document.getElementById("mapExpandedOverlay");
+      const mapElement = document.getElementById("tripPlacesMap");
+
+      if (!overlay || !mapElement || !normalMapHost) return;
+
+      normalMapHost.appendChild(mapElement);
+      overlay.classList.remove("visible");
+      overlay.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("map-expanded-open");
+
+      setTimeout(() => tripLeafletMap?.invalidateSize(), 100);
+    }
+
+    async function geocodeMapAddress(address) {
+      const normalized = String(address || "").trim();
+
+      if (!normalized) return null;
+      if (mapGeocodeCache.has(normalized)) {
+        return mapGeocodeCache.get(normalized);
+      }
+
+      try {
+        const url =
+          "https://nominatim.openstreetmap.org/search"
+          + `?format=jsonv2&limit=1&countrycodes=pl,de,dk,cz,at&accept-language=pl&q=${encodeURIComponent(normalized)}`;
+
+        const response = await fetch(url, {
+          headers: { "Accept": "application/json" }
+        });
+
+        if (!response.ok) throw new Error("Błąd wyszukiwania adresu.");
+
+        const results = await response.json();
+        const first = results?.[0];
+
+        const coordinates = first
+          ? { lat: Number(first.lat), lon: Number(first.lon) }
+          : null;
+
+        mapGeocodeCache.set(normalized, coordinates);
+        return coordinates;
+      } catch (error) {
+        console.warn("Nie udało się ustalić współrzędnych:", normalized, error);
+        mapGeocodeCache.set(normalized, null);
+        return null;
+      }
+    }
+
+    async function loadPlacesMap() {
+      const message = document.getElementById("mapPointsMessage");
+      const status = document.getElementById("mapGeocodeStatus");
+      const campingCounter = document.getElementById("campingPointsCount");
+      const locationCounter = document.getElementById("locationPointsCount");
+      const pinsCounter = document.getElementById("visiblePinsCount");
+
+      if (!selectedTrip || !message || !status) return;
+
+      try {
+        showMessage(message, "Ładowanie mapy...");
+
+        await loadLeafletAssets();
+        initializeLeafletMap();
+
+        const [
+          { data: campingData, error: campingError },
+          { data: locationsData, error: locationsError }
+        ] = await Promise.all([
+          client
+            .from("trip_places")
+            .select("id, name, description, address, place_type")
+            .eq("trip_id", selectedTrip.id)
+            .order("name", { ascending: true }),
+          client
+            .from("trip_locations")
+            .select("id, name, description, address")
+            .eq("trip_id", selectedTrip.id)
+            .order("name", { ascending: true })
+        ]);
+
+        if (campingError || locationsError) {
+          throw campingError || locationsError;
+        }
+
+        const campings = (campingData || []).filter(item => item.address?.trim());
+        const locations = (locationsData || []).filter(item => item.address?.trim());
+
+        campingCounter.textContent = `Kempingi i postoje: ${campings.length}`;
+        locationCounter.textContent = `Miejsca: ${locations.length}`;
+
+        const points = [
+          ...campings.map(item => ({ ...item, source: "camping" })),
+          ...locations.map(item => ({ ...item, source: "location" }))
+        ];
+
+        clearLeafletMarkers();
+        currentMapBounds = [];
+        tripLeafletMap.setView([52.05, 19.15], 6);
+
+        if (!points.length) {
+          showMessage(
+            message,
+            "Brak adresów do pokazania. Uzupełnij adresy w zakładkach „Kempingi i postoje” lub „Miejsca”.",
+            "warning"
+          );
+          pinsCounter.textContent = "Pinezki na mapie: 0";
+          status.textContent = "";
+          return;
+        }
+
+        showMessage(message, "");
+        status.textContent = `Ustalanie położenia punktów: 0 z ${points.length}...`;
+
+        let visiblePins = 0;
+
+        for (let index = 0; index < points.length; index += 1) {
+          const point = points[index];
+          status.textContent = `Ustalanie położenia punktów: ${index + 1} z ${points.length}...`;
+
+          const coordinates = await geocodeMapAddress(point.address);
+          if (!coordinates) continue;
+
+          const marker = L.marker([coordinates.lat, coordinates.lon]).addTo(tripLeafletMap);
+          const sourceLabel =
+            point.source === "camping"
+              ? "Kemping / miejsce postoju"
+              : "Miejsce";
+
+          marker.bindPopup(`
+            <strong>${escapeHtml(point.name)}</strong><br>
+            <span>${escapeHtml(sourceLabel)}</span><br>
+            <span>${escapeHtml(point.address)}</span><br>
+            <a
+              href="${escapeHtml(googleMapsAddressUrl(point.address))}"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Otwórz w Google Maps
+            </a>
+          `);
+
+          tripMapMarkers.push(marker);
+          currentMapBounds.push([coordinates.lat, coordinates.lon]);
+          visiblePins += 1;
+        }
+
+        pinsCounter.textContent = `Pinezki na mapie: ${visiblePins}`;
+        status.textContent = visiblePins
+          ? `Wyświetlono ${visiblePins} punktów.`
+          : "Nie udało się odnaleźć adresów na mapie. Sprawdź ich pisownię.";
+
+        setTimeout(() => tripLeafletMap?.invalidateSize(), 80);
+      } catch (error) {
+        console.error(error);
+        showMessage(
+          message,
+          "Nie udało się załadować mapy. Pozostałe zakładki strony działają normalnie.",
+          "error"
+        );
+        status.textContent = "";
+      }
+    }
+
+    function initializeLeafletMap() {
+      const mapContainer = document.getElementById("tripPlacesMap");
+      if (!mapContainer || typeof L === "undefined") return;
+
+      if (!tripLeafletMap) {
+        mapContainer.innerHTML = "";
+
+        tripLeafletMap = L.map(mapContainer, {
+          center: [52.05, 19.15],
+          zoom: 6,
+          minZoom: 4,
+          maxZoom: 18,
+          zoomControl: true
+        });
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          maxZoom: 19,
+          attribution: "&copy; OpenStreetMap"
+        }).addTo(tripLeafletMap);
+      }
+
+      tripLeafletMap.setView([52.05, 19.15], 6);
+      setTimeout(() => tripLeafletMap.invalidateSize(), 50);
+    }
+
+    function clearLeafletMarkers() {
+      if (!tripLeafletMap) return;
+
+      tripMapMarkers.forEach(marker => {
+        tripLeafletMap.removeLayer(marker);
+      });
+
+      tripMapMarkers = [];
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", setupMapInnerTabs);
+    } else {
+      setupMapInnerTabs();
     }
 
 
@@ -7893,5 +8228,16 @@
       </button>
     </div>
   </div>
+
+  <div id="mapExpandedOverlay" class="map-expanded-overlay" aria-hidden="true">
+    <div class="map-expanded-header">
+      <strong>Mapa miejsc</strong>
+      <button id="closeExpandedMapButton" class="button secondary" type="button">
+        Zamknij
+      </button>
+    </div>
+    <div id="expandedMapHost"></div>
+  </div>
+
 </body>
 </html>
